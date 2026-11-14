@@ -1476,7 +1476,8 @@ $("in-name").addEventListener("input",()=>{draft.name=$("in-name").value});
 const ON={code:"",role:"",R:null,v:null,pick:[],my:{},sent:{},done:false,ready:false};
 const esc=t=>String(t==null?"":t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ONNM=["先鋒","中堅","大将"],ONHAND=["押す","組む","引く"];
-function onCfg(){try{return JSON.parse(localStorage.getItem("sumo-fbcfg")||"null")}catch(e){return null}}
+const FB_DEFAULT={apiKey:"AIzaSyDnA-TQE8b2PCXgtDsnGPeKL5VxojnaMiI",authDomain:"oshi-sumo.firebaseapp.com",databaseURL:"https://oshi-sumo-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"oshi-sumo",storageBucket:"oshi-sumo.firebasestorage.app",messagingSenderId:"319178404742",appId:"1:319178404742:web:4c3298efeebf9cbd127207"}; // 推し相撲の Firebase（最初から組み込み）
+function onCfg(){try{return JSON.parse(localStorage.getItem("sumo-fbcfg")||"null")||FB_DEFAULT}catch(e){return FB_DEFAULT}}
 function onTeam(){return G.room.map(p=>({n:p.name,t:p.type,gi:p.gi,top:p.top,f:p.face||{eye:0,brow:0,nose:0,mouth:0},mc:p.mc||0,hr:hairOf(p),ks:ksOf(p)||null,rk:rankOf(p),sc:Math.round(score(p)*10)/10,fv:favOf(p)}))}
 function onChar(el,w){try{if(w.gi!==undefined&&w.gi!==null)el.innerHTML=`<img class="body" src="img/${w.top===9?"n":"g"}${(w.gi|0)}.webp" alt="">`;else renderChar(el,w.t|0,w.f,w.mc|0,w.hr|0,w.ks||null)}catch(e){el.innerHTML=""}}
 function onSan(t){ // 相手から届いたデータは信用せず、範囲を丸める
@@ -1490,7 +1491,7 @@ function onLoadFb(cb){
 }
 function onOpen(){
  $("on-st").textContent="";$("on-main").innerHTML="";$("on-lobby").style.display="block";
- $("on-cfgbox").style.display=onCfg()?"none":"block";$("on-cfgbtn").style.display=onCfg()?"block":"none";
+ $("on-cfgbox").style.display=onCfg()?"none":"block";$("on-cfgbtn").style.display="none";
  show("s-on");
 }
 function onConnect(){
