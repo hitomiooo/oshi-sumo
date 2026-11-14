@@ -64,6 +64,7 @@ h2{font-size:19px;margin:14px 0 6px;border-left:6px solid var(--red);padding-lef
 .char img{position:absolute;display:block}
 .char .body{inset:0;width:100%;height:100%;object-fit:fill}
 .char .part{transform:translate(-50%,-50%);mix-blend-mode:multiply;pointer-events:none}
+.char .part.nm{mix-blend-mode:normal}.char .part.sf{opacity:.88}
 .pick{display:flex;align-items:center;gap:6px;margin:4px 0}
 .pick b{width:2.5em;font-size:16px}
 .pick button{width:38px;height:34px;font:inherit;font-size:20px;border:2px solid var(--ink);background:var(--paper2);border-radius:8px}
@@ -555,9 +556,17 @@ const FACE_NAMES={
  eye:["細め","切れ長","丸い","ふたえ","鋭い","ねむたげ","まんまる","ふつう","つり目","おだやか"],
  brow:["太い一文字","険しい","アーチ","短太","豪快","流れ眉","うねり","荒眉","細い","丸アーチ"],
  nose:["小さめ","大きい","高い","ふつう","ワイド","鷲鼻","細め","まるい","すっと","しっかり"],
- mouth:["一文字","ゆるい弧","にっこり","ニヤリ","への字","大声","食いしばり","大笑い","ふくらみ","お"]};
-const PW={"brow": [641, 592, 595, 451, 679, 619, 602, 666, 568, 575], "eye": [483, 522, 476, 521, 543, 533, 477, 524, 516, 594], "nose": [175, 291, 184, 219, 297, 231, 151, 270, 220, 201], "mouth": [333, 347, 349, 340, 341, 286, 340, 333, 315, 103]};
-const PH={"brow": [84, 130, 75, 59, 104, 67, 116, 105, 42, 92], "eye": [57, 55, 98, 71, 90, 65, 114, 69, 66, 68], "nose": [174, 229, 274, 192, 178, 271, 221, 222, 224, 244], "mouth": [32, 80, 109, 107, 51, 169, 114, 202, 60, 118]};
+ mouth:["一文字","ゆるい弧","にっこり","ニヤリ","への字","大声","食いしばり","大笑い","ふくらみ","お"],
+ rk:["細おもて","やさがお","いかつい","ふくよか","まんまる"], // 顔の形（頭の絵 hd0〜4）
+ hige:["なし","ちょび","八の字","口＋あご","あご回り","もじゃ"]};
+// 追加の部品（10〜14番）。陰影つきで、ふつうの重ね方で描く
+FACE_NAMES.eye.push("鋭いつり目","すずしげ","切れ長","笑い目","にっこり目");
+FACE_NAMES.brow.push("きりっと","太まっすぐ","太い山形","なだらか","細アーチ");
+FACE_NAMES.nose.push("すっと高い","だんご鼻","どっしり","大きめ丸","あぐら鼻");
+FACE_NAMES.mouth.push("きりり","ほほえみ","厚くちびる","笑顔","大笑い");
+const FN=k=>FACE_NAMES[k].length;
+const PW={"brow": [641, 592, 595, 451, 679, 619, 602, 666, 568, 575, 568, 598, 604, 635, 588], "eye": [483, 522, 476, 521, 543, 533, 477, 524, 516, 594, 520, 513, 522, 538, 536], "nose": [175, 291, 184, 219, 297, 231, 151, 270, 220, 201, 146, 193, 220, 239, 262], "mouth": [333, 347, 349, 340, 341, 286, 340, 333, 315, 103, 329, 338, 351, 335, 336], "hige": [0, 438, 442, 386, 420, 395]};
+const PH={"brow": [84, 130, 75, 59, 104, 67, 116, 105, 42, 92, 136, 96, 138, 113, 99], "eye": [57, 55, 98, 71, 90, 65, 114, 69, 66, 68, 79, 62, 59, 56, 57], "nose": [174, 229, 274, 192, 178, 271, 221, 222, 224, 244, 175, 157, 150, 149, 145], "mouth": [32, 80, 109, 107, 51, 169, 114, 202, 60, 118, 102, 101, 117, 158, 195], "hige": [0, 67, 98, 193, 165, 213]};
 const RANKS=["序ノ口","序二段","三段目","幕下","十両","前頭","小結","関脇","大関","横綱"];
 const RANK_TH=[0,4,9,14,20,26,33,40,48,56];
 const WAZA=[ // 決まり手13種。h＝勝った手（0押す／1組む／2引く）、id＝動画ファイル名 img/ci_<id>.webp
@@ -650,28 +659,69 @@ function radarSVG(el,sets){
 /* ============ キャラ描画 ============ */
 const FP=[{cx:109.5,fw:35,chin:[101,119,119,109,139]},{cx:109,fw:38,chin:[102,120,119,110,139]},{cx:112,fw:38,chin:[101,119,118,107,139]},{cx:112.5,fw:40,chin:[101,119,119,110,139]},{cx:112.5,fw:41,chin:[99,116,117,108,137]}]; // 顔の位置（220x330座標・髪型ごとにあごの高さが違う）
 const HAIR_NAMES=["ちょんまげ","大銀杏","銀杏","ざんばら","丸髷"];
-function renderChar(el,typeIdx,face,mc,hair,ks){
+function renderCharOld(el,typeIdx,face,mc,hair,ks){ // 化粧まわしを着けたとき（化粧まわしの絵が昔の体のため、この描き方を使う）
  const W=220,H=330,f=FP[typeIdx];
  const hi=(hair===undefined||hair<0)?3:hair;
  let kurl=null;
- if(ks&&typeof KS!=="undefined"){kurl=KS.get(typeIdx,hi,ks);if(!kurl)KS.build(typeIdx,hi,ks).then(()=>{if(el.isConnected)renderChar(el,typeIdx,face,mc,hair,ks)}).catch(()=>{})}
+ if(ks&&typeof KS!=="undefined"){kurl=KS.get(typeIdx,hi,ks);if(!kurl)KS.build(typeIdx,hi,ks).then(()=>{if(el.isConnected)renderCharOld(el,typeIdx,face,mc,hair,ks)}).catch(()=>{})}
  const pc=(x,y)=>`left:${(x/W*100).toFixed(2)}%;top:${(y/H*100).toFixed(2)}%`;
  const w=(px)=>`width:${(px/W*100).toFixed(2)}%`;
  let h=`<img class="body" src="${kurl||`img/p${typeIdx}_${hi}${mc?"_"+mc:""}.webp`}" alt="">`;
  const fw=f.fw, cx=f.cx, cy=f.chin[hi], ey=cy-0.64*fw, nb=cy-0.36*fw, my=cy-0.19*fw;
  const fe=0.84*fw/520, fb=0.90*fw/600, fn=0.20*fw/220, fm=0.32*fw/335;
- const eI=face.eye||0, bI=face.brow||0, nI=face.nose||0, mI=face.mouth||0;
- const put=(x,y,pxw,src)=>`<img class="part" style="${pc(x,y)};${w(pxw)}" src="${src}" alt="">`;
- h+=put(cx,ey,PW.eye[eI]*fe,`img/eye${eI}.png`);
- h+=put(cx,ey-0.125*fw,PW.brow[bI]*fb,`img/brow${bI}.png`);
- h+=put(cx,nb-PH.nose[nI]*fn/2,PW.nose[nI]*fn,`img/nose${nI}.png`);
- h+=put(cx,my,PW.mouth[mI]*fm,`img/mouth${mI}.png`);
+ const eI=face.eye||0, bI=face.brow||0, nI=face.nose||0, mI=face.mouth||0, rk=(face.rk||0)+1, hg=face.hige||0;
+ const put=(x,y,pxw,src,nm)=>`<img class="part${nm?" nm":""}" style="${pc(x,y)};${w(pxw)}" src="${src}" alt="">`;
+ if(rk>0)h+=put(cx,cy-0.437*fw,0.8775*fw,`img/fs${rk}.webp`,1); // 輪郭：陰影つきの顔の土台
+ const HG=[null,{w:.40,y:-.06,f:1},{w:.44,y:-.05,f:1},{w:.46,y:.03,f:1},{w:.60,y:.10,f:0},{w:.58,y:.10,f:0}]; // ひげ：幅・口からの高さ（fw比）・口より手前か
+ const beard=()=>{const g=HG[hg];return g?put(cx,my+g.y*fw,g.w*fw,`img/hige${hg}.png`,1):""};
+ if(hg&&!HG[hg].f)h+=beard();
+ h+=put(cx,ey,PW.eye[eI]*fe*(eI>=10?0.92:1),`img/eye${eI}.png`,eI>=10);
+ h+=put(cx,ey-0.125*fw,PW.brow[bI]*fb*(bI>=10?0.86:1),`img/brow${bI}.png`,bI>=10); // 追加の眉は少し小さめ
+ h+=put(cx,nb-PH.nose[nI]*fn/2,PW.nose[nI]*fn,`img/nose${nI}.png`,nI>=10);
+ h+=put(cx,my,PW.mouth[mI]*fm,`img/mouth${mI}.png`,mI>=10);
+ if(hg&&HG[hg].f)h+=beard();
  el.innerHTML=h;
 }
 
-function renderFaceZoom(el,typeIdx,face,mc,hair,ks){ // 顔のまわりだけを大きく表示（スマホでも顔が見やすいように）
- const f=FP[typeIdx],hi=(hair===undefined||hair<0)?3:hair,cy=f.chin[hi];
- const S=3.2,fx=f.cx/220,fy=(cy-0.45*f.fw)/330;
+// ============ 力士の絵（首なしの体＋頭＋顔の部品） ============
+// 体：img/nb{体型}_{まわしの色}.webp（440x660）。頭：img/hd{顔の形}_{髪型}.webp（目鼻を消した、陰影つきの頭）
+// 髪型：0ざんばら 1大きめの髷 2ちょんまげ 3大銀杏（出世で変わる）
+const NB=[{"neckY": 210, "neckX": 220, "neckW": 69}, {"neckY": 210, "neckX": 220, "neckW": 60}, {"neckY": 210, "neckX": 220, "neckW": 76}, {"neckY": 210, "neckX": 220, "neckW": 87}, {"neckY": 207, "neckX": 220, "neckW": 99}]; // 体ごとの首の位置（440x660の座標）
+const HD=[[{"w": 125, "h": 148, "ey": 73.8, "my": 106.5}, {"w": 121, "h": 167, "ey": 92.4, "my": 125.1}, {"w": 97, "h": 150, "ey": 75.9, "my": 108.6}, {"w": 103, "h": 161, "ey": 87.0, "my": 119.7}], [{"w": 131, "h": 151, "ey": 69.9, "my": 97.8}, {"w": 125, "h": 156, "ey": 75.3, "my": 103.2}, {"w": 108, "h": 153, "ey": 72.6, "my": 100.5}, {"w": 110, "h": 162, "ey": 82.2, "my": 110.1}], [{"w": 133, "h": 154, "ey": 65.1, "my": 92.1}, {"w": 125, "h": 162, "ey": 72.0, "my": 99.0}, {"w": 107, "h": 154, "ey": 65.4, "my": 92.4}, {"w": 111, "h": 163, "ey": 74.1, "my": 101.1}], [{"w": 149, "h": 150, "ey": 62.1, "my": 93.6}, {"w": 133, "h": 158, "ey": 69.9, "my": 101.4}, {"w": 131, "h": 148, "ey": 61.2, "my": 92.7}, {"w": 129, "h": 162, "ey": 75.3, "my": 106.8}], [{"w": 146, "h": 148, "ey": 60.3, "my": 89.7}, {"w": 139, "h": 161, "ey": 72.9, "my": 102.3}, {"w": 133, "h": 154, "ey": 66.3, "my": 95.7}, {"w": 132, "h": 163, "ey": 75.6, "my": 105.0}]]; // 頭ごとの大きさと、目・口の高さ（頭の絵の上からの距離）
+const HFW=58.5, HOV=22; // 顔の部品の大きさの基準、頭を首に重ねる量
+const KH=[3,3,0,1]; // 化粧まわしの絵（昔の体）で使う髪の番号
+function headBox(typeIdx,face,hair){ // 頭の位置（220x330の座標）
+ const hs=(hair===undefined||hair<0)?0:clamp(hair|0,0,3),fi=clamp(face.rk|0,0,4),B=NB[typeIdx],hm=HD[fi][hs];
+ const left=(B.neckX-hm.w/2)/2,top=(B.neckY+HOV-hm.h)/2;
+ return {hs,fi,left,top,w:hm.w/2,h:hm.h/2,cx:B.neckX/2,ey:top+hm.ey/2,my:top+hm.my/2,fw:HFW/2};
+}
+function renderChar(el,typeIdx,face,mc,hair,ks){
+ face=face||{};
+ if(ks&&typeof KS!=="undefined")return renderCharOld(el,typeIdx,face,mc,KH[(hair===undefined||hair<0)?0:clamp(hair|0,0,3)],ks);
+ const W=220,H=330,hb=headBox(typeIdx,face,hair);
+ const pc=(x,y)=>`left:${(x/W*100).toFixed(2)}%;top:${(y/H*100).toFixed(2)}%`;
+ const w=(px)=>`width:${(px/W*100).toFixed(2)}%`;
+ let h=`<img class="body" src="img/nb${typeIdx}_${mc|0}.webp" alt="">`;
+ h+=`<img class="part nm hd" style="left:${(hb.cx/W*100).toFixed(2)}%;top:${((hb.top+hb.h/2)/H*100).toFixed(2)}%;width:${(hb.w/W*100).toFixed(2)}%" src="img/hd${hb.fi}_${hb.hs}.webp" alt="">`; // .part は中心で位置を決める
+ const fw=hb.fw,cx=hb.cx,ey=hb.ey,my=hb.my,nb=ey+0.28*fw;
+ const fe=0.84*fw/520, fb=0.90*fw/600, fn=0.20*fw/220, fm=0.32*fw/335;
+ const eI=face.eye||0, bI=face.brow||0, nI=face.nose||0, mI=face.mouth||0, hg=face.hige||0;
+ const put=(x,y,pxw,src,nm)=>`<img class="part${nm?" nm":""}" style="${pc(x,y)};${w(pxw)}" src="${src}" alt="">`;
+ const HG=[null,{w:.40,y:-.06,f:1},{w:.44,y:-.05,f:1},{w:.46,y:.03,f:1},{w:.60,y:.10,f:0},{w:.58,y:.10,f:0}]; // ひげ：幅・口からの高さ（fw比）・口より手前か
+ const beard=()=>{const g=HG[hg];return g?put(cx,my+g.y*fw,g.w*fw,`img/hige${hg}.png`,1):""};
+ if(hg&&!HG[hg].f)h+=beard();
+ h+=put(cx,ey,PW.eye[eI]*fe*(eI>=10?0.92:1),`img/eye${eI}.png`,eI>=10);
+ h+=put(cx,ey-0.125*fw,PW.brow[bI]*fb*(bI>=10?0.86:1),`img/brow${bI}.png`,bI>=10);
+ h+=put(cx,nb-PH.nose[nI]*fn/2,PW.nose[nI]*fn,`img/nose${nI}.png`,nI>=10);
+ h+=put(cx,my,PW.mouth[mI]*fm,`img/mouth${mI}.png`,mI>=10);
+ if(hg&&HG[hg].f)h+=beard();
+ el.innerHTML=h;
+}
+
+function renderFaceZoom(el,typeIdx,face,mc,hair,ks){ // 頭のまわりだけを大きく表示（スマホでも顔が見やすいように）
+ face=face||{};let fx,fy,S;
+ if(ks){const f=FP[typeIdx],hi=KH[(hair===undefined||hair<0)?0:clamp(hair|0,0,3)],cy=f.chin[hi];S=3.2;fx=f.cx/220;fy=(cy-0.45*f.fw)/330}
+ else{const hb=headBox(typeIdx,face,hair);S=Math.min(3.2,0.86/(1.5*hb.h/330));fx=hb.cx/220;fy=(hb.top+hb.h*0.52)/330}
  el.innerHTML=`<div class="zin" style="width:${S*100}%;left:${(50-fx*S*100).toFixed(2)}%;top:${(50-fy*1.5*S*100).toFixed(2)}%"></div>`;
  renderChar(el.firstChild,typeIdx,face,mc,hair,ks);
 }
@@ -854,20 +904,20 @@ const P=()=>G.room[G.sel];
 const Tt=p=>adjType(p.type,p.h);
 const randName=()=>SHIKO_A[ri(SHIKO_A.length)]+SHIKO_B[ri(SHIKO_B.length)];
 function rankOf(p){let r=0;for(let i=0;i<RANK_TH.length;i++)if(p.rankPt>=RANK_TH[i])r=i;return r}
-function hairOf(p){const r=rankOf(p);return r<2?3:r<4?0:1} // ざんばら→ちょんまげ→大銀杏
+function hairOf(p){const r=rankOf(p);return r<2?0:r===2?1:r===3?2:3} // 序ノ口・序二段＝ざんばら、三段目＝大きめの髷、幕下＝ちょんまげ、十両から＝大銀杏
 function favOf(p){const t=p.type;return t===0?1:t===1?2:t===2?0:t===3?(p.id%3):0} // 得意手
 function baseScore(p){return 0.6*power(p)+0.4*effSpd(p)}
 function statusOf(p){const a=[];if(p.out>0)a.push("全休予定");if(p.inj>0)a.push("怪我");if(p.fat>=70)a.push("疲労");return a.join("・")}
 function mkWrestler(d){
  const t=adjType(d.type,d.h??TYPES[d.type].h), b=G?G.cardB:{w:0,s:0,v:0};
  const wM=t.wMax+b.w,sM=t.sMax+b.s,vM=t.vMax+b.v;
- return {id:ri(100000),name:(d.name||randName()).trim().slice(0,6),type:d.type,h:t.h,face:{eye:d.eye,brow:d.brow,nose:d.nose,mouth:d.mouth},
+ return {id:ri(100000),name:(d.name||randName()).trim().slice(0,6),type:d.type,h:t.h,face:{eye:d.eye,brow:d.brow,nose:d.nose,mouth:d.mouth,rk:d.rk||0,hige:d.hige||0},
   w:Math.round(wM*0.55),s:Math.round(sM*0.38),v:Math.round(vM*0.5),wMax:wM,sMax:sM,vMax:vM,fat:0,inj:0,out:0,rankPt:0,pop:basePop(t.h),mc:0,champ:0,hist:[]};
 }
 
 /* ============ 作成 ============ */
 let step=0;
-const newDraft=()=>({type:3,h:180,eye:ri(10),brow:ri(10),nose:ri(10),mouth:ri(10),name:randName()});
+const newDraft=()=>({type:3,h:180,rk:ri(5),eye:ri(FN("eye")),brow:ri(FN("brow")),nose:ri(FN("nose")),mouth:ri(FN("mouth")),hige:Math.random()<0.6?0:1+ri(5),name:randName()});
 let stSel=0;
 function startCreate(){G=null;step=0;draft=newDraft();stSel=0;renderStable();show("s-stable")}
 function renderStable(){$("st-list").innerHTML=STABLES.map((x,i)=>`<button class="stb ${i===stSel?"sel":""}" data-i="${i}"><img src="img/sti${i}.webp" alt=""><div class="tx"><b>${x.n}</b><span>${x.d}</span></div></button>`).join("")}
@@ -909,16 +959,16 @@ function buildCreate(){
  $("in-name").value=draft.name;
  $("types").innerHTML=TYPES.map(t=>`<button data-i="${t.id}">${t.name.replace("型","")}</button>`).join("");
  $("types").onclick=e=>{const b=e.target.closest("button");if(!b)return;draft.type=+b.dataset.i;draft.h=TYPES[draft.type].h;refreshCreate()};
- const kinds=[["eye","目"],["brow","眉"],["nose","鼻"],["mouth","口"]];
+ const kinds=[["rk","輪郭"],["eye","目"],["brow","眉"],["nose","鼻"],["mouth","口"],["hige","ひげ"]];
  $("face-picks").innerHTML=kinds.map(([k,l])=>`<div class="pick"><b>${l}</b><button data-k="${k}" data-d="-1">◀</button><span id="pk-${k}"></span><button data-k="${k}" data-d="1">▶</button></div>`).join("")+
-   `<div class="small">※ 髪型は出世で自動的に変わります（ざんばら→ちょんまげ→大銀杏）。</div>`;
- $("face-picks").onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;draft[k]=(draft[k]+ +b.dataset.d+10)%10;refreshCreate()};
+   `<div class="small">※ 髪型は出世で自動的に変わります（ざんばら→大きめの髷→ちょんまげ→大銀杏）。</div>`;
+ $("face-picks").onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;draft[k]=((draft[k]||0)+ +b.dataset.d+FN(k))%FN(k);refreshCreate()};
  refreshCreate();$("s-create").scrollTop=0;
 }
 function refreshCreate(){
  document.querySelectorAll("#types button").forEach(b=>b.classList.toggle("sel",+b.dataset.i===draft.type));
  const t=adjType(draft.type,draft.h??TYPES[draft.type].h);
- renderPv($("c-preview"),draft.type,draft,0,3);
+ renderPv($("c-preview"),draft.type,draft,0,0);
  $("in-h").value=t.h;$("h-val").textContent=t.h+"cm";
  const d0=t.h-TYPES[draft.type].h;
  $("h-hint").textContent=`型の標準は${TYPES[draft.type].h}cm。高くすると体重MAX・筋力MAXが増え、素早さMAXと人気が下がり、怪我しやすくなります。`+(d0?`（標準比${d0>0?"+":""}${d0}cm）`:"");
@@ -927,7 +977,7 @@ function refreshCreate(){
  radarSVG($("radar"),[{v:radarVals(mx,true),fill:"rgba(168,50,45,.28)",stroke:"#a8322d"}]);
  const over=Math.max(0,t.wMax-tgtW(t.h));
  $("type-desc").innerHTML=`<b>${t.name}</b>　身長${t.h}cm／体重MAX ${t.wMax}kg／筋力MAX ${t.sMax}／素早さMAX ${t.vMax}<br>${t.desc}<br>適正体重(身長−60)は${tgtW(t.h)}kg。MAXまで太ると${over}kg超過 → 素早さが約${Math.round(over*0.4)}％低下します。<br>初期の人気：<b>${basePop(t.h)}</b>（小柄ほど高い。懸賞金が${(popMul(basePop(t.h))*100).toFixed(0)}％になる）`;
- for(const k of ["eye","brow","nose","mouth"])$("pk-"+k).textContent=FACE_NAMES[k][draft[k]];
+ for(const k of ["rk","eye","brow","nose","mouth","hige"])$("pk-"+k).textContent=FACE_NAMES[k][draft[k]||0];
 }
 function addDeshi(){
  draft.name=$("in-name").value||draft.name;
@@ -1555,22 +1605,22 @@ $("m-body").addEventListener("click",e=>{
 
 /* ============ 顔を変える（無料・何度でも） ============ */
 let FD=null;
-function openFace(){const p=G.room[0];FD={...p.face};
- $("fc-picks").innerHTML=[["eye","目"],["brow","眉"],["nose","鼻"],["mouth","口"]].map(([k,l])=>`<div class="pick"><b>${l}</b><button data-k="${k}" data-d="-1">◀</button><span id="fp-${k}"></span><button data-k="${k}" data-d="1">▶</button></div>`).join("");
+function openFace(){const p=G.room[0];FD={rk:0,hige:0,...p.face};
+ $("fc-picks").innerHTML=[["rk","輪郭"],["eye","目"],["brow","眉"],["nose","鼻"],["mouth","口"],["hige","ひげ"]].map(([k,l])=>`<div class="pick"><b>${l}</b><button data-k="${k}" data-d="-1">◀</button><span id="fp-${k}"></span><button data-k="${k}" data-d="1">▶</button></div>`).join("");
  show("s-face");renderFace();$("s-face").scrollTop=0}
 function renderFace(){const p=G.room[0];
  renderPv($("fc-pv"),p.type,FD,p.mc||0,hairOf(p),ksOf(p));$("fc-who").textContent=p.name;
- for(const k of ["eye","brow","nose","mouth"])$("fp-"+k).textContent=FACE_NAMES[k][FD[k]]}
+ for(const k of ["rk","eye","brow","nose","mouth","hige"])$("fp-"+k).textContent=FACE_NAMES[k][FD[k]||0]}
 $("btn-fc").onclick=openFace;
 $("fc-pv").onclick=()=>{const e=$("fc-pv");e.dataset.full=e.dataset.full==="1"?"":"1";renderFace()};
 $("c-preview").onclick=()=>{const e=$("c-preview");e.dataset.full=e.dataset.full==="1"?"":"1";refreshCreate()};
-$("fc-picks").onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;FD[k]=(FD[k]+ +b.dataset.d+10)%10;renderFace()};
+$("fc-picks").onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;FD[k]=((FD[k]||0)+ +b.dataset.d+FN(k))%FN(k);renderFace()};
 $("fc-ok").onclick=()=>{G.room[0].face={...FD};save();goHome()};
 $("fc-back").onclick=goHome;
 /* ============ 化粧まわし画面 ============ */
 const KS_TRIAL=true; // お試し中：作成券を使わずに、いくつでも作れる（本番にするときは false）
 let KU={tab:0,c:1,d:0,sel:-1,cat:0};
-function ksBody(){const p=P();return p.gi!==undefined?{type:3,hair:1,face:{eye:1,brow:1,nose:1,mouth:1},name:"（見本）"}:{type:p.type,hair:hairOf(p),face:p.face,name:p.name}}
+function ksBody(){const p=P();return p.gi!==undefined?{type:3,hair:3,face:{eye:1,brow:1,nose:1,mouth:1},name:"（見本）"}:{type:p.type,hair:hairOf(p),face:p.face,name:p.name}}
 function openKs(){ensureG(G);KU={tab:0,c:KU.c,d:KU.d,sel:G.ks.length?0:-1,cat:KU.cat||0};show("s-ks");renderKs()}
 function ksCur(){return KU.tab===0?{c:KU.c,d:KU.d}:(G.ks[KU.sel]||null)}
 function renderKs(){
