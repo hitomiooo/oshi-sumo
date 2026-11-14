@@ -88,6 +88,32 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 .tc.pk .char{outline:4px solid var(--red);outline-offset:1px}
 .tc.lk .char img{filter:brightness(0);opacity:.3}
 .gtab{margin-bottom:8px}.gtab .btn{margin:0}
+/* 稽古場（ホームの稽古メニュー） */
+.kk-h{display:flex;align-items:center;justify-content:space-between;margin:16px 0 2px}
+.kk-h .kk-t{font-size:21px;font-weight:900;letter-spacing:.18em;border-left:6px solid var(--red);padding-left:8px}
+.kk-dots{font-size:13px;white-space:nowrap}.kk-dots b{font-size:18px;color:var(--red);margin:0 2px}
+.kk-dots i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--gold);margin-left:3px;vertical-align:middle}
+.kk-dots i.u{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
+.kk-sub{font-size:14px;opacity:.8;margin:0 0 8px 14px}
+.keiko{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.keiko button{font:inherit;text-align:left;border:0;border-radius:14px;padding:10px 9px 8px;color:var(--ink);
+ background:linear-gradient(180deg,#fffaf0,#f1dfbc);box-shadow:inset 0 0 0 1.5px var(--line),0 3px 0 #6b4a2b,0 6px 12px rgba(60,35,10,.18);
+ display:grid;grid-template-columns:42px 1fr;column-gap:8px;align-items:center;min-width:0}
+.keiko button:active{transform:translateY(2px);box-shadow:inset 0 0 0 1.5px var(--line),0 1px 0 #6b4a2b}
+.keiko button:disabled{opacity:.45;filter:grayscale(.7)}
+.keiko .ic,.kk-waza .ic{font-style:normal;grid-row:span 2;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:21px;font-weight:900;color:#fff8e8;
+ background:radial-gradient(circle at 35% 30%,var(--c1),var(--c2));box-shadow:0 0 0 2px var(--gold),0 2px 4px rgba(0,0,0,.25)}
+.keiko .nm{font-size:17px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.keiko .fl{font-size:12px;font-weight:600;opacity:.7;line-height:1.35}
+.keiko .chs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;align-items:center}
+.keiko .cp{font-size:12px;font-weight:800;padding:1px 7px 2px;border-radius:999px;color:#fff;background:var(--cc);letter-spacing:.02em}
+.keiko .ft{margin-left:auto;font-size:11px;font-weight:700;opacity:.6;white-space:nowrap}
+.kk-waza{width:100%;margin-top:10px;font:inherit;border:0;border-radius:14px;padding:11px 12px;display:flex;align-items:center;gap:10px;text-align:left;color:#fff4dc;
+ background:linear-gradient(135deg,#2a3b63,#17223b);box-shadow:inset 0 0 0 2px var(--gold),0 3px 0 #0c1222,0 6px 14px rgba(0,0,0,.3)}
+.kk-waza:active{transform:translateY(2px)}
+.kk-waza .ic{--c1:#e0b44f;--c2:#9a6b1c;color:#2b1d12;flex:0 0 42px}
+.kk-waza b{display:block;font-size:18px;letter-spacing:.1em}.kk-waza small{display:block;font-size:12px;opacity:.8;font-weight:600}
+.kk-waza em{margin-left:auto;font-style:normal;font-size:12px;text-align:right;white-space:nowrap;color:#f3d48a}
 .days{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin:6px 0}
 .days div{aspect-ratio:1;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:14px;background:#fff7e6}
 .days .w{background:var(--ink);color:#fff7e6}
@@ -304,9 +330,10 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
     <div class="stat"><span>人気</span><div class="bar"><i id="b-p" style="background:#b98a2e"></i></div><em id="e-p"></em></div>
     <div class="small" id="h-note"></div>
   </div>
-  <h2 id="h-turn">稽古</h2>
-  <div class="menu" id="menu"></div>
-  <button class="btn blue" id="btn-wz" style="margin-top:8px">技の稽古（決まり手を覚える）</button>
+  <div class="kk-h" id="h-turn"></div>
+  <div class="kk-sub" id="kk-sub"></div>
+  <div class="keiko" id="menu"></div>
+  <button class="kk-waza" id="btn-wz"><i class="ic">技</i><span><b>技の稽古</b><small>決まり手を身につけて、本場所で決める</small></span><em id="wz-cnt"></em></button>
   <div class="gohint" id="go-hint"></div><button class="btn ob" id="btn-go" style="margin-top:10px">場所に入る</button>
   <button class="btn sub ob" id="btn-mw" style="margin-bottom:0">まわしの色</button>
   <button class="btn sub ob" id="btn-ks" style="margin-bottom:0;margin-top:6px">化粧まわし</button>
@@ -549,14 +576,17 @@ const KIMA=WAZA.map(w=>w.n);
 const WAZA_MS=Object.fromEntries(WAZA.map(w=>[w.id,2160])); // 決まり手ごとの動画を流す長さ（ミリ秒）。いまの動画は1周1.08秒なので2周ぶん。動画ごとに変えるときは WAZA_MS.oshidashi=3000; のように書き足す
 const SHIKO_A=["朝","豊","琴","若","大","隆","千代","北","栃","霧","旭","魁","宝","照","玉","嘉"];
 const SHIKO_B=["龍","山","海","錦","桜","富士","ノ海","光","鵬","風","嶽","ノ里","勝","国","丸"];
-const MENU=[
- {k:"shiko",n:"四股・基礎",d:"筋力＋ 素早さ＋",f:12,w:0.8,s:2.6,v:1.2,inj:0.01},
- {k:"butsu",n:"ぶつかり稽古",d:"筋力＋＋ 体重＋ 怪我注意",f:24,w:1.6,s:3.4,v:0.4,inj:0.07},
- {k:"weight",n:"ウエイト",d:"筋力＋＋＋",f:18,w:0.5,s:4.2,v:-0.2,inj:0.03},
- {k:"suri",n:"すり足・反復",d:"素早さ＋＋＋",f:14,w:-0.3,s:0.6,v:4.2,inj:0.015},
- {k:"chanko",n:"ちゃんこ食事",d:"体重＋＋＋ 素早さ−",f:4,w:7,s:0.4,v:-1.2,inj:0},
- {k:"rest",n:"休養",d:"疲労−40 怪我が治る",f:-40,w:0,s:0,v:0,inj:0}
+const MENU=[ // ic＝丸の中の字、c＝丸の色、fl＝ひとこと、ch＝効果のしるし [名前,強さ(−1〜3),色]
+ {k:"shiko",n:"四股・基礎",d:"筋力＋ 素早さ＋",f:12,w:0.8,s:2.6,v:1.2,inj:0.01,ic:"四",c:["#c9573f","#7d2a1c"],fl:"土俵の基本。足腰を練る",ch:[["筋力",1],["素早さ",1]]},
+ {k:"butsu",n:"ぶつかり稽古",d:"筋力＋＋ 体重＋ 怪我注意",f:24,w:1.6,s:3.4,v:0.4,inj:0.07,ic:"当",c:["#b8452f","#6a1f14"],fl:"胸を借りて、何度でも当たる",ch:[["筋力",2],["体重",1],["怪我注意",-9]]},
+ {k:"weight",n:"ウエイト",d:"筋力＋＋＋",f:18,w:0.5,s:4.2,v:-0.2,inj:0.03,ic:"鉄",c:["#6b6f7a","#2f323a"],fl:"鉄の重みで、力をつける",ch:[["筋力",3]]},
+ {k:"suri",n:"すり足・反復",d:"素早さ＋＋＋",f:14,w:-0.3,s:0.6,v:4.2,inj:0.015,ic:"足",c:["#3f8a8c","#1c4a4c"],fl:"足の裏で土俵をつかむ",ch:[["素早さ",3]]},
+ {k:"chanko",n:"ちゃんこ",d:"体重＋＋＋ 素早さ−",f:4,w:7,s:0.4,v:-1.2,inj:0,ic:"鍋",c:["#d08a2c","#8a4a12"],fl:"食べるのも稽古のうち",ch:[["体重",3],["素早さ",-1]]},
+ {k:"rest",n:"休養",d:"疲労−40 怪我が治る",f:-40,w:0,s:0,v:0,inj:0,ic:"休",c:["#5b8a4a","#2c4a22"],fl:"体を休めて、次に備える",ch:[["疲れが取れる",9],["怪我が治る",9]]}
 ];
+const CHC={"筋力":"#b5402f","体重":"#a8661f","素早さ":"#2f7f86","怪我注意":"#5a5a5a","疲れが取れる":"#4f7d3f","怪我が治る":"#4f7d3f"};
+function chipHtml([n,lv]){const c=CHC[n]||"#666";if(lv===9)return `<span class="cp" style="--cc:${c}">${n}</span>`;if(lv===-9)return `<span class="cp" style="--cc:${c}">⚠ ${n}</span>`;
+ return `<span class="cp" style="--cc:${lv<0?"#8a7a66":c}">${n}${lv<0?"▼":"▲".repeat(lv)}</span>`}
 const TURNS_PER_BASHO=6;
 const MAWASHI=[{n:"黒系",c:"#3b2f28"},{n:"紺",c:"#223468"},{n:"赤",c:"#a82828"},{n:"緑",c:"#28784a"},{n:"水色",c:"#3c96be"},{n:"橙",c:"#d67824"},{n:"桃",c:"#d6648c"},{n:"紫",c:"#68388c"}];
 const MW_SEKITORI=4, MW_PURPLE=8; // 十両(関取)から色を選べる／紫は大関以上（ゲーム上の特典）
@@ -957,8 +987,10 @@ function goHome(){
   +`<br>覚えた技：${wzLearned(p).length?wzLearned(p).map(w=>`${w.n}<span style="color:#c9a24a">${"★".repeat(wzLv(p,w.id))}</span>`).join("、"):"まだなし（「技の稽古」で覚えます）"}`;
  const left=ROOM_TURNS-G.turn;
  const nxt=r<9?`次の昇進まで あと${(RANK_TH[r+1]-p.rankPt).toFixed(1)}pt`:"最高位・横綱";
- $("h-turn").textContent=`稽古（部屋の残り${left}回）　いま：${p.name}　${nxt}`;
- $("menu").innerHTML=MENU.map(m=>`<button data-k="${m.k}" ${(m.k==="butsu"&&p.inj>0)?"disabled":""}><b>${m.n}</b><span>${m.d}／疲労${m.f>0?"+":""}${m.f}</span></button>`).join("");
+ $("h-turn").innerHTML=`<span class="kk-t">稽古場</span><span class="kk-dots">あと<b>${left}</b>回${Array.from({length:ROOM_TURNS},(_,i)=>`<i class="${i<left?"":"u"}"></i>`).join("")}</span>`;
+ $("kk-sub").innerHTML=`稽古する力士：<b>${p.name}</b>　${nxt}`;
+ $("menu").innerHTML=MENU.map(m=>`<button data-k="${m.k}" ${(m.k==="butsu"&&p.inj>0)?"disabled":""}><i class="ic" style="--c1:${m.c[0]};--c2:${m.c[1]}">${m.ic}</i><span class="nm">${m.n}</span><span class="fl">${m.fl}</span><span class="chs">${m.ch.map(chipHtml).join("")}<span class="ft">${m.f>0?"疲れ＋"+m.f:"疲れ"+String(m.f).replace("-","−")}</span></span></button>`).join("");
+ $("wz-cnt").innerHTML=`覚えた技<br><b style="font-size:17px">${wzLearned(p).length}</b> / ${WAZA.length}`;
  $("btn-go").textContent=left>0?`場所に入る（稽古があと${left}回残っています）`:"場所に入る";$("go-hint").textContent=left>0?`稽古があと${left}回残っています`:"準備ができたら「場所へ」";
  show("s-home");
 }
