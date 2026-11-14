@@ -698,7 +698,7 @@ const KH=[3,3,0,1]; // 化粧まわしの絵（昔の体）で使う髪の番号
 const FL=[{b:-20,n:89,m:109,e:156,c:200},{b:-37,n:68,m:93,e:160,c:240},{b:-27,n:67,m:90,e:167,c:275},{b:-35,n:62,m:105,e:173,c:300},{b:-37,n:62,m:98,e:173,c:360}]; // 顔の形ごとの部品の位置（元の顔の絵から測った値）
 function headBox(typeIdx,face,hair){ // 頭の位置（220x330の座標）
  const hs=(hair===undefined||hair<0)?0:clamp(hair|0,0,3),fi=clamp(face.rk|0,0,4),B=NB[typeIdx],hm=HD[fi][hs];
- const a=(face.adj&&face.adj.rk)||{},sc=1+(a.s||0)*0.05,dy=(a.y||0)*1.5; // 輪郭の大きさ・高さの調整（首の位置はそのまま）
+ const a=(face.adj&&face.adj.rk)||{},sc=1+(a.s||0)*0.06,dy=(a.y||0)*4; // 輪郭の大きさ・高さの調整（首の位置はそのまま）
  const W2=hm.w*sc,H2=hm.h*sc,left=(B.neckX-W2/2)/2,top=(B.neckY+HOV-H2+dy)/2;
  return {hs,fi,left,top,w:W2/2,h:H2/2,cx:B.neckX/2,ey:top+hm.ey*sc/2,my:top+hm.my*sc/2,fw:HFW*sc/2};
 }
@@ -716,9 +716,9 @@ function renderChar(el,typeIdx,face,mc,hair,ks){
  const eI=face.eye||0, bI=face.brow||0, nI=face.nose||0, mI=face.mouth||0, hg=face.hige||0;
  const put=(x,y,pxw,src,nm)=>`<img class="part${nm?" nm":""}" style="${pc(x,y)};${w(pxw)}" src="${src}" alt="">`;
  const HG=[null,{w:.40,y:-.30,f:1},{w:.45,y:-.28,f:1},{w:.50,y:.12,f:1},{w:.62,y:.42,f:0},{w:.60,y:.40,f:0}]; // ひげ：顔の幅に対する幅・口からの高さ（両目の幅比）・口より手前か
- const beard=()=>{const g=HG[hg],a=(face.adj&&face.adj.hige)||{};return g?put(cx,my+g.y*es+(a.y||0)*es*0.05,g.w*cw*(1+(a.s||0)*0.07),`img/hige${hg}.png`,1):""};
+ const beard=()=>{const g=HG[hg],a=(face.adj&&face.adj.hige)||{};return g?put(cx,my+g.y*es+(a.y||0)*es*0.14,g.w*cw*(1+(a.s||0)*0.10),`img/hige${hg}.png`,1):""};
  if(hg&&!HG[hg].f)h+=beard();
- const A=k=>{const a=(face.adj&&face.adj[k])||{};return {y:(a.y||0)*es*0.05,s:1+(a.s||0)*0.07}}; // 位置・大きさの調整
+ const A=k=>{const a=(face.adj&&face.adj[k])||{};return {y:(a.y||0)*es*0.14,s:1+(a.s||0)*0.10}}; // 位置・大きさの調整
  const aE=A("eye"),aB=A("brow"),aN=A("nose"),aM=A("mouth");
  const ew=es*1.18*PW.eye[eI]/520*aE.s, bw=es*1.22*PW.brow[bI]/600*aB.s, nw=es*(0.34+0.0005*(L.c-200))*PW.nose[nI]/220*aN.s, mw=es*(0.60+0.0010*(L.c-200))*PW.mouth[mI]/335*aM.s;
  h+=put(cx,ey+aE.y,ew,`img/eye${eI}.png`,1);
@@ -747,7 +747,7 @@ function adjClick(b,face,pf){
  if(b.dataset.ak){adjSel=b.dataset.ak;return true}
  const m=b.dataset.am;if(!m)return false;
  face.adj=face.adj||{};const a=face.adj[adjSel]=face.adj[adjSel]||{y:0,s:0};
- if(m==="up")a.y=Math.max(-8,(a.y||0)-1);if(m==="down")a.y=Math.min(8,(a.y||0)+1);
+ if(m==="up")a.y=Math.max(-6,(a.y||0)-1);if(m==="down")a.y=Math.min(6,(a.y||0)+1);
  if(m==="small")a.s=Math.max(-5,(a.s||0)-1);if(m==="big")a.s=Math.min(5,(a.s||0)+1);
  if(m==="reset"){a.y=0;a.s=0}
  return true;
@@ -1757,6 +1757,17 @@ $("hlp").onclick=()=>modal(`<div style="text-align:left;font-size:16px;line-heig
 <b>目標</b>：部屋の力士を育てて番付を上げ、横綱をめざします。<br><br>
 <b>HPと部屋レベル</b><br>稽古は1回でHPを1、場所入りは3使います。HPは時間で回復します（4分に1）。稽古や場所で経験がたまると部屋レベルが上がり、最大HPが増えます。<br><br><b>① 稽古（ホーム）</b><br>1場所の前に<b>8回</b>まで稽古できます。力士を1人選び、メニュー（筋力・素早さ・体重など）を選ぶと、その力士が伸びます。やりすぎると疲労がたまり、怪我もしやすくなります。「休養」で疲れと怪我が治ります。<br><br>
 <b>② 場所（15日間）</b><br>毎日、<b>出す力士を選んで</b>取組をします。育てる力士は7番、ほかの2人は4番ずつです。取組は「押す＞組む＞引く＞押す」のじゃんけんで、3局面のうち2つ取れば勝ちです。総合力（稽古で育てた強さ）の差が大きいほど有利で、そのうえで相手の得意手を読めば勝ちやすくなります。<br>取組に勝つ・負けるだけでも力士は経験で少し強くなります。怪我をすると休場になります。<br><br>
+<b>勝ちやすさのしくみ（稽古で強くなる）</b><br>
+勝ち負けは<b>総合力</b>の差で決まります。総合力は稽古で伸びるので、<b>稽古するほど勝ちやすく</b>なります。<br>
+・<b>総合力</b> ＝（パワー×0.6 ＋ 速さ×0.4）× 疲れの補正 × 怪我の補正<br>
+・<b>パワー</b> ＝ 筋力 ＋ 体重÷4（四股・ぶつかり・ウエイト・ちゃんこで伸びる）<br>
+・<b>速さ</b> ＝ 素早さ（すり足で伸びる）。体重が適正（身長−60kg）を超えると、1kgごとに0.4％下がる<br>
+・<b>疲れの補正</b> ＝ 1 − 疲労÷300（疲労100％で約3分の2）。<b>怪我</b>をしていると0.7倍。休養で回復<br>
+・<b>1局面の勝率</b> ＝ 50％ ＋ 力の差の割合×120％ ＋ 読み（じゃんけん）勝ち＋12％／負け−12％ ＋ 技の効果（最大＋8％）。ただし6％〜94％の間<br>
+　「力の差の割合」＝（自分−相手）÷（自分＋相手）。例：総合力60と50なら 10÷110×120％ ≒ ＋11％ → 読みがあいこなら約61％<br>
+・3局面のうち<b>2つ</b>取れば勝ち。1局面61％なら、一番を取る確率は約66％<br>
+・<b>技の稽古</b>で決まり手を覚えると、その手（押す・組む・引く）で勝ちやすくなります（★1つで＋1.2％、同じ手の合計で最大＋8％）<br>
+・<b>団体戦</b>は1番勝負で、総合力の差＋得意手の相性（有利＋10％／不利−10％）で決まります<br><br>
 <b>③ 場所のあと</b><br>勝ち数で<b>番付</b>と<b>人気</b>が上がり、<b>懸賞金（両）</b>がもらえます。そのあと3人で<b>団体戦</b>（先鋒・中堅・大将）に出ます。<br><br>
 <b>④ ガチャ</b><br>両を使って「ちゃんこガチャ」を引くと、強化アイテムや親方カードが出ます。親方カードで力士の限界（MAX）が上がります。<br><br>
 <b>⑤ 化粧まわし</b><br>場所で<b>優勝</b>すると「作成券」が1枚もらえます。ホームの「化粧まわし」で、<b>色</b>と<b>柄</b>を選んでオリジナルをつくり、コレクションして力士に着せられます（はじめに3枚あります）。ガチャの横綱など、専用の絵の力士には着せられません。<br><br><b>コツ</b>：上位の力士（横綱など）はもう伸びにくいので、あなたの力士を中心に育てましょう。</div>`);
