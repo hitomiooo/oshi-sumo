@@ -475,6 +475,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
   <div class="small">相手の布陣（先鋒→大将）は見えています。こちらの出す順番を決めよう。得意手の相性（押し＞組み＞引き＞押し）で有利・不利が出ます。休場中の力士は不戦敗です。</div>
   <div class="card" id="t-opp"></div>
   <h2>こちらの布陣</h2>
+  <div id="t-ask" style="font-size:18px;font-weight:900;text-align:center;padding:10px;margin:4px 0 6px;border-radius:10px;background:#a8322d;color:#fff7e6"></div>
   <div id="t-mine"></div>
   <div class="card small" id="t-slots"></div>
   <div class="row" id="t-ctl"><button class="btn sub grow" id="t-undo">やり直す</button><button class="btn grow" id="t-go" disabled>勝負！</button></div>
@@ -1189,7 +1190,8 @@ function wzLearned(p){return WAZA.filter(w=>wzLv(p,w.id)>0)}
 function wzBonus(p,hand){let n=0;WAZA.forEach(w=>{if(w.h===hand)n+=wzLv(p,w.id)});return Math.min(0.08,n*0.012)} // 同じ手の技の★の合計で勝ちやすくなる（最大＋8％）
 function pickKima(p,hand){ // 勝った側の手に合う決まり手。自分の力士は覚えた技から（★が多い技ほど出やすい）
  const g=WAZA.filter(w=>w.h===hand);
- if(p){const own=g.filter(w=>wzLv(p,w.id)>0);if(own.length){let r=Math.random()*own.reduce((a,w)=>a+wzLv(p,w.id),0);for(const w of own){r-=wzLv(p,w.id);if(r<0)return w}return own[0]}}
+ if(p){const own=g.filter(w=>wzLv(p,w.id)>0);if(own.length){let r=Math.random()*own.reduce((a,w)=>a+wzLv(p,w.id),0);for(const w of own){r-=wzLv(p,w.id);if(r<0)return w}return own[0]}
+  if(p.gi===undefined)return WAZA[0]} // 自分で育てる力士は、技を覚えるまで「押し出し」だけ（覚えた技はその手で勝ったときに出る）
  return g[ri(g.length)];
 }
 let HOME_Y=0;
@@ -1198,7 +1200,7 @@ function openWaza(){HOME_Y=$("s-home").scrollTop;renderWaza();show("s-waza")}
 function renderWaza(){
  const p=P();hpTick();
  $("wz-hp").textContent=`HP ${G.hp}/${maxHp()}`;
- $("wz-head").innerHTML=`<b>${p.name}</b>（得意手：${HANDN[favOf(p)]}）　部屋の残り稽古 <b>${Math.max(0,ROOM_TURNS-G.turn)}</b>回<br>技を稽古すると熟練度がたまり、100で<b>習得（★1）</b>、最大★3。覚えた技は取組の決まり手に出て、その手（押す・組む・引く）で勝ちやすくなります。得意手の技は覚えやすいです。稽古1回＝HP${COST_TRAIN}。`;
+ $("wz-head").innerHTML=`<b>${p.name}</b>（得意手：${HANDN[favOf(p)]}）　部屋の残り稽古 <b>${Math.max(0,ROOM_TURNS-G.turn)}</b>回<br>はじめは決まり手が「押し出し」だけです。技を稽古すると熟練度がたまり、100で<b>習得（★1）</b>、最大★3。覚えた技は取組の決まり手に出て、その手（押す・組む・引く）で勝ちやすくなります。得意手の技は覚えやすいです。稽古1回＝HP${COST_TRAIN}。`;
  $("wz-list").innerHTML=[0,1,2].map(h=>`<h2>${HAND[h]}の技</h2><div class="menu">`+WAZA.filter(w=>w.h===h).map(w=>{
   const pt=wzPt(p,w.id),lv=wzLv(p,w.id),done=lv>=WZ_MAX,rest=WZ_STEP-pt%WZ_STEP;
   return `<button data-w="${w.id}"><b>${w.n}</b><span class="wzs">${wzStars(lv)}</span><span>${w.d}</span><div class="bar" style="margin:4px 0 2px"><i style="width:${done?100:pt%WZ_STEP}%;background:#c9a24a"></i></div><span>${done?"極めた！":(lv?"次の★まで ":"習得まで ")+rest}</span></button>`}).join("")+`</div>`).join("");
@@ -1491,9 +1493,15 @@ function openTeam(){
 function renderTeam(){
  $("t-opp").innerHTML=`<div class="tg">`+TM.opp.map((o,i)=>`<div class="tc"><b>${["先鋒","中堅","大将"][i]}</b><div class="char" id="to${i}"></div><b>${o.name}</b><small>得意：${HANDN[o.fav]}</small><small>${lvl(o.sc,TM.avg)}</small></div>`).join("")+`</div>`;
  TM.opp.forEach((o,i)=>renderO($("to"+i),o));
+ const NM=["先鋒","中堅","大将"],k=TM.pick.length,ask=$("t-ask");
+ if(TM.done)ask.style.display="none";
+ else{ask.style.display="block";
+  if(k<3){const o=TM.opp[k],mt=["押し","組み","引き"];ask.innerHTML=`<span style="font-size:15px;opacity:.9">${k+1}／3</span>　<b>${NM[k]}</b>を選んでください<div style="font-size:14px;font-weight:700;margin-top:4px">相手の${NM[k]}：${o.name}（得意：${HANDN[o.fav]}）</div>`}
+  else ask.innerHTML=`布陣が決まりました。「勝負！」を押してください`}
  $("t-mine").innerHTML=G.room.map((p,i)=>{
   const used=TM.pick.includes(i), gone=B&&B.gone[i];
-  return `<button class="btn sub" data-i="${i}" ${used||TM.done?"disabled":""} style="margin:4px 0;text-align:left"><b>${p.name}</b>　${RANKS[rankOf(p)]}　得意：${HANDN[favOf(p)]}　力${baseScore(p).toFixed(0)}${gone?"　<span style='color:#a8322d'>休場中（不戦敗）</span>":p.inj>0?"　<span style='color:#a8322d'>怪我</span>":""}</button>`}).join("");
+  const slot=used?NM[TM.pick.indexOf(i)]:"",mt=(!used&&k<3&&!gone)?rpsResult(favOf(p),TM.opp[k].fav):null;
+  return `<button class="btn sub" data-i="${i}" ${used||TM.done||k>=3?"disabled":""} style="margin:4px 0;text-align:left">${slot?`<span style="background:#a8322d;color:#fff;border-radius:6px;padding:0 6px;margin-right:6px">${slot}</span>`:""}<b>${p.name}</b>　${RANKS[rankOf(p)]}　得意：${HANDN[favOf(p)]}　力${baseScore(p).toFixed(0)}${mt===null?"":mt>0?"　<b style='color:#2f7f3a'>相性◎有利</b>":mt<0?"　<b style='color:#285aaa'>相性△不利</b>":"　相性○互角"}${gone?"　<span style='color:#a8322d'>休場中（不戦敗）</span>":p.inj>0?"　<span style='color:#a8322d'>怪我</span>":""}</button>`}).join("");
  $("t-slots").innerHTML=bdHTML([0,1,2].map(i=>({e:TM.pick[i]!==undefined?G.room[TM.pick[i]].name:"？",w:TM.opp[i].name})))+`<div class="small" style="text-align:center">左から 先鋒・中堅・大将（東方＝あなた／西方＝相手）</div>`;
  $("t-go").disabled=TM.pick.length<3||TM.done;$("t-undo").disabled=TM.done||!TM.pick.length;
 }
@@ -1766,7 +1774,7 @@ $("hlp").onclick=()=>modal(`<div style="text-align:left;font-size:16px;line-heig
 ・<b>1局面の勝率</b> ＝ 50％ ＋ 力の差の割合×120％ ＋ 読み（じゃんけん）勝ち＋12％／負け−12％ ＋ 技の効果（最大＋8％）。ただし6％〜94％の間<br>
 　「力の差の割合」＝（自分−相手）÷（自分＋相手）。例：総合力60と50なら 10÷110×120％ ≒ ＋11％ → 読みがあいこなら約61％<br>
 ・3局面のうち<b>2つ</b>取れば勝ち。1局面61％なら、一番を取る確率は約66％<br>
-・<b>技の稽古</b>で決まり手を覚えると、その手（押す・組む・引く）で勝ちやすくなります（★1つで＋1.2％、同じ手の合計で最大＋8％）<br>
+・あなたが育てる力士は、はじめは決まり手が<b>「押し出し」だけ</b>です。<b>技の稽古</b>で決まり手を覚えると、その技が出るようになり、その手（押す・組む・引く）で勝ちやすくなります（★1つで＋1.2％、同じ手の合計で最大＋8％）<br>
 ・<b>団体戦</b>は1番勝負で、総合力の差＋得意手の相性（有利＋10％／不利−10％）で決まります<br><br>
 <b>③ 場所のあと</b><br>勝ち数で<b>番付</b>と<b>人気</b>が上がり、<b>懸賞金（両）</b>がもらえます。そのあと3人で<b>団体戦</b>（先鋒・中堅・大将）に出ます。<br><br>
 <b>④ ガチャ</b><br>両を使って「ちゃんこガチャ」を引くと、強化アイテムや親方カードが出ます。親方カードで力士の限界（MAX）が上がります。<br><br>
