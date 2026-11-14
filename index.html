@@ -51,7 +51,7 @@ h2{font-size:19px;margin:14px 0 6px;border-left:6px solid var(--red);padding-lef
 #ci{position:fixed;inset:0;background:rgba(15,8,5,.92);display:none;z-index:55;flex-direction:column;align-items:center;justify-content:center;gap:10px}
 #ci.on{display:flex}.ciw{position:relative;width:min(100vw,520px);overflow:hidden;border-top:3px solid #c9a24a;border-bottom:3px solid #c9a24a;animation:cin .28s ease-out}
 @keyframes cin{from{transform:translateX(-100%) skewX(-8deg)}to{transform:none}}
-#ci-box img{display:block;width:100%;height:auto}
+#ci-box img{display:block;width:100%;height:auto;max-height:80vh;object-fit:cover}
 #ci-t{position:absolute;left:0;right:0;top:6%;text-align:center;font-weight:900;font-size:min(9vw,40px);color:#fff7e6;letter-spacing:.3em;text-shadow:0 0 8px #000,0 3px 0 #a8322d,2px 2px 0 #000}
 #ci-k{position:absolute;left:0;right:0;bottom:7%;text-align:center;font-weight:900;font-size:min(8vw,34px);color:#fff7e6;text-shadow:0 0 8px #000,0 3px 0 #a8322d;opacity:0;transform:scale(1.8);transition:all .25s ease-out}
 #ci-k.on{opacity:1;transform:none}#ci-s{color:#d9c9a0;font-size:15px}
@@ -573,7 +573,7 @@ const WAZA=[ // 決まり手13種。h＝勝った手（0押す／1組む／2引�
  {n:"引き落とし",id:"hikiotoshi",h:2,d:"手前に引いて前へ落とす"}
 ];
 const KIMA=WAZA.map(w=>w.n);
-const WAZA_MS=Object.fromEntries(WAZA.map(w=>[w.id,2160])); // 決まり手ごとの動画を流す長さ（ミリ秒）。いまの動画は1周1.08秒なので2周ぶん。動画ごとに変えるときは WAZA_MS.oshidashi=3000; のように書き足す
+const WAZA_MS=Object.fromEntries(WAZA.map(w=>[w.id,2400])); // 決まり手ごとの動画を流す長さ（ミリ秒）。いまの動画は1周1.2秒なので2周ぶん。動画ごとに変えるときは WAZA_MS.oshidashi=3000; のように書き足す
 const SHIKO_A=["朝","豊","琴","若","大","隆","千代","北","栃","霧","旭","魁","宝","照","玉","嘉"];
 const SHIKO_B=["龍","山","海","錦","桜","富士","ノ海","光","鵬","風","嶽","ノ里","勝","国","丸"];
 const MENU=[ // ic＝丸の中の字、c＝丸の色、fl＝ひとこと、ch＝効果のしるし [名前,強さ(−1〜3),色]
@@ -1020,7 +1020,7 @@ function train(k){
  if(G.buff>0)G.buff--;
  G.turn++;save();
  if(G.turn>=ROOM_TURNS){modal(msg.replace(/\n/g,"<br>")+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre())}
- else modal(msg.replace(/\n/g,"<br>"),goHome);
+ else modal(msg.replace(/\n/g,"<br>"),goHomeKeep);
 }
 /* ============ 力士スカウト（力士ガチャ）と控え ============ */
 const SC_COST1=1000,SC_COST10=9000,SC_PITY=30,LB_MAX=5,LB_COIN=500,BENCH_MAX=40;
@@ -1100,7 +1100,9 @@ function pickKima(p,hand){ // 勝った側の手に合う決まり手。自分�
  if(p){const own=g.filter(w=>wzLv(p,w.id)>0);if(own.length){let r=Math.random()*own.reduce((a,w)=>a+wzLv(p,w.id),0);for(const w of own){r-=wzLv(p,w.id);if(r<0)return w}return own[0]}}
  return g[ri(g.length)];
 }
-function openWaza(){renderWaza();show("s-waza")}
+let HOME_Y=0;
+function goHomeKeep(y){const t=(y===undefined)?$("s-home").scrollTop:y;goHome();$("s-home").scrollTop=t} // 画面の位置をそのままにホームへ（稽古のあとに上まで戻らないように）
+function openWaza(){HOME_Y=$("s-home").scrollTop;renderWaza();show("s-waza")}
 function renderWaza(){
  const p=P();hpTick();
  $("wz-hp").textContent=`HP ${G.hp}/${maxHp()}`;
@@ -1128,11 +1130,11 @@ function practiceWaza(id){
  G.room.forEach((o,i)=>{if(i!==G.sel)o.fat=Math.max(0,o.fat-4)});
  if(G.buff>0)G.buff--;
  G.turn++;save();
- const after=()=>{if(G.turn>=ROOM_TURNS)modal(msg+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre());else modal(msg,renderWaza)};
+ const after=()=>{if(G.turn>=ROOM_TURNS)modal(msg+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre());else modal(msg,()=>{const y=$("s-waza").scrollTop;renderWaza();$("s-waza").scrollTop=y})};
  cutIn(w.id,{title:"技の稽古",text:(lv1>lv0?(lv0===0?"習得！ ":"上達！ "):"")+w.n,win:true,fb:CI_KIND(w.n)},after);
 }
 $("btn-wz").onclick=openWaza;
-$("wz-back").onclick=goHome;
+$("wz-back").onclick=()=>{goHome();$("h-turn").scrollIntoView({block:"start"})}; // 稽古場の位置にもどる
 $("wz-list").onclick=e=>{const b=e.target.closest("button[data-w]");if(!b||$("ci").classList.contains("on")||$("modal").classList.contains("on"))return;practiceWaza(b.dataset.w)};
 function openPre(){G.skip=G.room.map(()=>false);renderPre();show("s-pre")}
 function renderPre(){
@@ -1415,7 +1417,8 @@ function runTeam(){
    p.fat=clamp(p.fat+5,0,100);
   }
   if(win)w++;
-  bouts.push({p,o,win,note,fusen,kima:KIMA[ri(KIMA.length)],s});
+  const lw=win?pickKima(p,favOf(p)):pickKima(null,o.fav??ri(3)); // 勝った側の得意手に合う決まり手（自分の力士は覚えた技から）
+  bouts.push({p,o,win,note,fusen,kima:lw.n,kid:lw.id,s});
  });
  const won=w>=2;let prize=0;
  if(won){
@@ -1453,7 +1456,8 @@ function runTeam(){
    if(i<2)later(()=>showBout(i+1),1400);else later(fin,1200);
   };
   if(t.fusen){later(fin1,900)}
-  else{later(()=>{el.classList.add("clash");Aud.hit(true)},900);later(fin1,2100)}
+  else{later(()=>{el.classList.add("clash");Aud.hit(true)},900);
+   later(()=>cutIn(t.kid,{title:NM[i]+"戦",kima:t.kima,win:t.win,mirror:!t.win,who:t.win?t.p.name:t.o.name,fb:CI_KIND(t.kima)},()=>{if(!dead)fin1()}),1500)}
   el.scrollIntoView({block:"nearest",behavior:"smooth"});
  };
  $("t-skip").onclick=()=>{dead=true;timers.forEach(clearTimeout);box.innerHTML="";
@@ -1716,7 +1720,7 @@ $("in-name").addEventListener("input",()=>{draft.name=$("in-name").value});
 {const g=load();if(g&&g.room&&g.stable!==undefined){$("btn-cont").style.display="block";if(g.bs&&g.bs.day<15)$("btn-cont").textContent=`つづきから（第${g.basho+1}場所の途中）`}}
 
 /* ============ 友だちとオンライン団体戦（Firebase Realtime Database） ============ */
-const ON={code:"",role:"",R:null,v:null,pick:[],my:{},sent:{},done:false,ready:false};
+const ON={code:"",role:"",R:null,v:null,pick:[],my:{},sent:{},ci:{},done:false,ready:false};
 const esc=t=>String(t==null?"":t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ONNM=["先鋒","中堅","大将"],ONHAND=["押す","組む","引く"];
 const FB_DEFAULT={apiKey:"AIzaSyDnA-TQE8b2PCXgtDsnGPeKL5VxojnaMiI",authDomain:"oshi-sumo.firebaseapp.com",databaseURL:"https://oshi-sumo-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"oshi-sumo",storageBucket:"oshi-sumo.firebasestorage.app",messagingSenderId:"319178404742",appId:"1:319178404742:web:4c3298efeebf9cbd127207"}; // 推し相撲の Firebase（最初から組み込み）
@@ -1748,7 +1752,7 @@ function onStart(role){
  onLoadFb(ok=>{
   if(!ok){$("on-st").textContent="Firebase を読み込めませんでした（通信を確認してください。公開ページ内では使えません）。";return}
   const db=onConnect();if(!db)return;
-  ON.code=code;ON.role=role;ON.pick=[];ON.my={};ON.sent={};ON.done=false;ON.ready=false;
+  ON.code=code;ON.role=role;ON.pick=[];ON.my={};ON.sent={};ON.ci={};ON.done=false;ON.ready=false;
   ON.R=db.ref("sumo/"+code);
   const me={name:G.stName||"部屋",team:onTeam(),t:Date.now()};
   const listen=()=>{$("on-st").textContent="";ON.R.on("value",s=>{ON.v=s.val();onRender(ON.v)});$("on-lobby").style.display="none"};
@@ -1778,7 +1782,7 @@ function onHostStep(v){
   for(let r=0;r<3;r++){
    const k=`b${b}_r${r}`,x=res[k];
    if(x){x.w?rw++:rl++;
-    if(rw>=2||rl>=2||r===2){if(!ON.sent["B"+b]){ON.sent["B"+b]=1;ON.R.child("bout/b"+b).set({w:rw>rl?1:0,k:KIMA[ri(KIMA.length)],a:rw,c:rl})}return}
+    if(rw>=2||rl>=2||r===2){if(!ON.sent["B"+b]){ON.sent["B"+b]=1;ON.R.child("bout/b"+b).set({w:rw>rl?1:0,k:pickKima(null,x.w?(x.h|0):(x.g|0)).n,a:rw,c:rl})}return}
     continue}
    const hd=(v.hand||{})[k];
    if(hd&&hd.host!==undefined&&hd.guest!==undefined&&!ON.sent[k]){
@@ -1823,6 +1827,8 @@ function onRender(v){
    const mh=host?x.h:x.g,oh=host?x.g:x.h,win=myw(!!x.w),rr=rpsResult(mh|0,oh|0);
    lines+=`<div class="small">局面${r+1}：あなた「${ONHAND[mh|0]}」 対 相手「${ONHAND[oh|0]}」→ ${rr>0?"読み勝ち":rr<0?"読み負け":"あいこ"}　<b style="color:${win?"#a8322d":"#285aaa"}">${win?esc(mt[mi].n):esc(ot[oi].n)}がこの局面を取った</b></div>`}
   if(bb){const win=myw(!!bb.w);if(win)mw++;else ow++;
+   if(!ON.ci["b"+b]){ON.ci["b"+b]=1;const kw=WAZA.find(w=>w.n===bb.k); // 新しく決まった取組は決まり手の動画を流す
+    if(kw&&!$("ci").classList.contains("on"))cutIn(kw.id,{title:ONNM[b]+"戦",kima:kw.n,win,mirror:!win,who:win?mt[mi].n:ot[oi].n,fb:CI_KIND(kw.n)},()=>{})}
    hist+=`<div class="card" style="padding:8px 10px"><b>${ONNM[b]}戦</b>　${esc(mt[mi].n)} 対 ${esc(ot[oi].n)}<br>${lines}<div class="wbn ${win?"w":"l"}" style="font-size:20px">${win?esc(mt[mi].n)+" の勝ち！":esc(ot[oi].n)+" の勝ち…"}<small>決まり手：${esc(KIMA.includes(bb.k)?bb.k:"？")}</small></div></div>`}
   else if(cur<0){cur=b;ON.curLines=lines}
  }
