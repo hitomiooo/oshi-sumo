@@ -82,6 +82,12 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 .menu b{display:block;font-size:18px}
 .menu span{font-size:14px;opacity:.85}
 .menu button:disabled{opacity:.4}
+.menu .wzs{display:block;color:#c9a24a;font-size:16px;letter-spacing:.1em;opacity:1}
+.char.fz{aspect-ratio:1/1}.char .zin{position:absolute;aspect-ratio:2/3}
+.fzc{font-size:12px;text-align:center;opacity:.75;margin-top:2px}
+.tc.pk .char{outline:4px solid var(--red);outline-offset:1px}
+.tc.lk .char img{filter:brightness(0);opacity:.3}
+.gtab{margin-bottom:8px}.gtab .btn{margin:0}
 .days{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin:6px 0}
 .days div{aspect-ratio:1;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:14px;background:#fff7e6}
 .days .w{background:var(--ink);color:#fff7e6}
@@ -263,7 +269,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
   <div class="small" id="h-hint"></div>
   <h2>顔つき</h2>
   <div class="row" style="align-items:flex-start;gap:10px">
-    <div style="width:36%;position:sticky;top:6px;align-self:flex-start"><div class="char" id="c-preview"></div></div>
+    <div style="width:42%;position:sticky;top:6px;align-self:flex-start"><div class="char" id="c-preview"></div><div class="fzc">タップで 顔アップ／全身</div></div>
     <div class="grow" id="face-picks"></div>
   </div>
   <svg id="radar" viewBox="-125 -122 250 240" style="width:78%;display:block;margin:8px auto 0"></svg>
@@ -281,6 +287,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
    <div id="hp-row" style="display:flex;justify-content:space-between;align-items:center;font-size:16px;margin-top:2px"><b id="hp-t"></b><span id="hp-n" class="small"></span></div>
   </div>
   <div class="roster" id="roster"></div>
+  <button class="btn sub" id="btn-bench" style="margin:6px 0 0">部屋の力士・入れ替え（<span id="bn-n">控え0人</span>）</button>
   <div class="hero" id="hero"><div class="t"><b id="h-name" style="font-size:20px"></b><div class="small" id="h-sub" style="color:#fff7e6"></div></div></div>
   <div class="row" style="align-items:flex-start;margin-top:8px">
     <div style="width:38%"><div class="char" id="c-home"></div></div>
@@ -299,6 +306,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
   </div>
   <h2 id="h-turn">稽古</h2>
   <div class="menu" id="menu"></div>
+  <button class="btn blue" id="btn-wz" style="margin-top:8px">技の稽古（決まり手を覚える）</button>
   <div class="gohint" id="go-hint"></div><button class="btn ob" id="btn-go" style="margin-top:10px">場所に入る</button>
   <button class="btn sub ob" id="btn-mw" style="margin-bottom:0">まわしの色</button>
   <button class="btn sub ob" id="btn-ks" style="margin-bottom:0;margin-top:6px">化粧まわし</button>
@@ -336,11 +344,19 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 </section>
 
 <!-- 顔を変える -->
+<!-- 技の稽古 -->
+<section class="screen" id="s-waza">
+  <div class="top"><b>技の稽古</b><span id="wz-hp"></span></div>
+  <div class="card small" id="wz-head" style="opacity:1"></div>
+  <div id="wz-list"></div>
+  <button class="btn sub" id="wz-back" style="margin-top:12px">もどる</button>
+</section>
+
 <section class="screen" id="s-face">
   <div class="top"><b>顔を変える</b><span></span></div>
   <div class="card small" style="opacity:1">何度でも無料で変えられます。名前と能力（体の型・身長）は変えられません。</div>
   <div class="row" style="align-items:flex-start;gap:10px">
-    <div style="width:36%"><div class="char" id="fc-pv"></div><div class="small" id="fc-who" style="text-align:center;margin-top:2px"></div></div>
+    <div style="width:42%"><div class="char" id="fc-pv"></div><div class="fzc">タップで 顔アップ／全身</div><div class="small" id="fc-who" style="text-align:center;margin-top:2px"></div></div>
     <div class="grow" id="fc-picks"></div>
   </div>
   <button class="btn" id="fc-ok" style="margin-top:14px">この顔にする</button>
@@ -434,6 +450,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 <!-- ガチャ -->
 <section class="screen" id="s-gacha">
   <div class="top"><b>ちゃんこガチャ</b><span id="g-coin"></span></div>
+  <div class="row gtab"><button class="btn grow" disabled>ちゃんこ</button><button class="btn blue grow" id="g-toscout">力士スカウト</button></div>
   <div class="card small"><b>出たものは自動で効きます（使う操作は不要）</b><br>
 <b>N</b>（どれか1つ）：疲労−20／部屋のHP＋2／人気＋2／部屋の経験＋15／体重＋2kg<br>
 <b>R</b>（どれか1つ）：次の稽古2回の伸び1.5倍／部屋のHP全回復／疲労0＋怪我が治る<br>
@@ -450,6 +467,34 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
   <div class="small">SR・SSRで親方が弟子入り。初めての親方は能力の限界(MAX)が伸びます。重複は200両に。</div>
   <div class="kgrid" id="k-grid"></div>
   <button class="btn sub" id="g-back">もどる</button>
+</section>
+
+<!-- 力士スカウト（力士ガチャ） -->
+<section class="screen" id="s-scout">
+  <div class="top"><b>力士スカウト</b><span id="sc-coin"></span></div>
+  <div class="row gtab"><button class="btn sub grow" id="sc-tochanko">ちゃんこ</button><button class="btn blue grow" disabled>力士スカウト</button></div>
+  <div class="card small">両を払って、新しい力士を部屋に迎えます。入った力士は「控え」になり、ホームの「部屋の力士・入れ替え」で出場メンバーと入れ替えられます。<br>
+関脇70％／大関25％／横綱5％。<b id="sc-pity"></b>回以内に横綱が出なければ、必ず横綱（天井）。<br>
+もういる力士が出たら<b>限界突破</b>：その力士の能力の上限(MAX)が上がります（5回まで。それ以上は500両に）。</div>
+  <div class="card small" id="sc-pick" style="display:none"></div>
+  <div class="row">
+    <button class="btn grow" id="sc-1">1回 1000両</button>
+    <button class="btn blue grow" id="sc-10">10回 9000両</button>
+  </div>
+  <div class="kgrid" id="sc-res"></div>
+  <div class="card small" id="sc-log"></div>
+  <h2>力士名鑑 <span class="small" id="sc-count"></span></h2>
+  <div class="kgrid" id="sc-book"></div>
+  <button class="btn sub" id="sc-back" style="margin-top:12px">もどる</button>
+</section>
+
+<!-- 部屋の力士・入れ替え -->
+<section class="screen" id="s-bench">
+  <div class="top"><b>部屋の力士</b><span id="bn-cnt"></span></div>
+  <div class="card small">場所と団体戦に出るのは「出場する3人」です。あなたが育てる力士は入れ替えられません。<br>①控えの力士をタップ → ②入れ替えたい出場枠をタップ。</div>
+  <h2>出場する3人</h2><div class="kgrid" id="bn-team"></div>
+  <h2>控え</h2><div class="kgrid" id="bn-list"></div>
+  <button class="btn sub" id="bn-back" style="margin-top:12px">もどる</button>
 </section>
 
 <button id="hlp" aria-label="遊び方">？</button><button id="snd" aria-label="音">♪</button>
@@ -485,7 +530,23 @@ const PW={"brow": [641, 592, 595, 451, 679, 619, 602, 666, 568, 575], "eye": [48
 const PH={"brow": [84, 130, 75, 59, 104, 67, 116, 105, 42, 92], "eye": [57, 55, 98, 71, 90, 65, 114, 69, 66, 68], "nose": [174, 229, 274, 192, 178, 271, 221, 222, 224, 244], "mouth": [32, 80, 109, 107, 51, 169, 114, 202, 60, 118]};
 const RANKS=["序ノ口","序二段","三段目","幕下","十両","前頭","小結","関脇","大関","横綱"];
 const RANK_TH=[0,4,9,14,20,26,33,40,48,56];
-const KIMA=["押し出し","寄り切り","上手投げ","突き落とし","はたき込み","引き落とし","掬い投げ","突き出し","寄り倒し","下手投げ","叩き込み","小手投げ","送り出し","浴びせ倒し"];
+const WAZA=[ // 決まり手13種。h＝勝った手（0押す／1組む／2引く）、id＝動画ファイル名 img/ci_<id>.webp
+ {n:"押し出し",id:"oshidashi",h:0,d:"両手で押して土俵の外へ出す"},
+ {n:"突き出し",id:"tsukidashi",h:0,d:"突っ張って土俵の外へ出す"},
+ {n:"送り出し",id:"okuridashi",h:0,d:"後ろに回り込んで外へ出す"},
+ {n:"寄り切り",id:"yorikiri",h:1,d:"まわしを取って体を寄せて出す"},
+ {n:"寄り倒し",id:"yoritaoshi",h:1,d:"寄りながら外へ押し倒す"},
+ {n:"浴びせ倒し",id:"abisetaoshi",h:1,d:"上からのしかかって倒す"},
+ {n:"上手投げ",id:"uwatenage",h:1,d:"腕の外からまわしを取って投げる"},
+ {n:"下手投げ",id:"shitatenage",h:1,d:"腕の内からまわしを取って投げる"},
+ {n:"掬い投げ",id:"sukuinage",h:1,d:"脇の下からすくうように投げる"},
+ {n:"小手投げ",id:"kotenage",h:1,d:"相手の腕を抱えこんで投げる"},
+ {n:"突き落とし",id:"tsukiotoshi",h:2,d:"横から突いて前へ落とす"},
+ {n:"はたき込み",id:"hatakikomi",h:2,d:"下がりながら上からはたく"},
+ {n:"引き落とし",id:"hikiotoshi",h:2,d:"手前に引いて前へ落とす"}
+];
+const KIMA=WAZA.map(w=>w.n);
+const WAZA_MS=Object.fromEntries(WAZA.map(w=>[w.id,2160])); // 決まり手ごとの動画を流す長さ（ミリ秒）。いまの動画は1周1.08秒なので2周ぶん。動画ごとに変えるときは WAZA_MS.oshidashi=3000; のように書き足す
 const SHIKO_A=["朝","豊","琴","若","大","隆","千代","北","栃","霧","旭","魁","宝","照","玉","嘉"];
 const SHIKO_B=["龍","山","海","錦","桜","富士","ノ海","光","鵬","風","嶽","ノ里","勝","国","丸"];
 const MENU=[
@@ -573,6 +634,17 @@ function renderChar(el,typeIdx,face,mc,hair,ks){
  h+=put(cx,nb-PH.nose[nI]*fn/2,PW.nose[nI]*fn,`img/nose${nI}.png`);
  h+=put(cx,my,PW.mouth[mI]*fm,`img/mouth${mI}.png`);
  el.innerHTML=h;
+}
+
+function renderFaceZoom(el,typeIdx,face,mc,hair,ks){ // 顔のまわりだけを大きく表示（スマホでも顔が見やすいように）
+ const f=FP[typeIdx],hi=(hair===undefined||hair<0)?3:hair,cy=f.chin[hi];
+ const S=3.2,fx=f.cx/220,fy=(cy-0.45*f.fw)/330;
+ el.innerHTML=`<div class="zin" style="width:${S*100}%;left:${(50-fx*S*100).toFixed(2)}%;top:${(50-fy*1.5*S*100).toFixed(2)}%"></div>`;
+ renderChar(el.firstChild,typeIdx,face,mc,hair,ks);
+}
+function renderPv(el,typeIdx,face,mc,hair,ks){ // 顔アップ（はじめ）と全身を、タップで切り替え
+ if(el.dataset.full==="1"){el.classList.remove("fz");renderChar(el,typeIdx,face,mc,hair,ks)}
+ else{el.classList.add("fz");renderFaceZoom(el,typeIdx,face,mc,hair,ks)}
 }
 
 /* ============ 化粧まわし（色×柄のスタンプ。優勝でつくれる） ============ */
@@ -671,11 +743,13 @@ const Aud=(()=>{
   }
  }
  // 音源ファイルのBGM（オープニング・作成中／取組中）。それ以外の画面は合成BGM
- const FILES={open:"bgm_open.mp3",fight:"bgm_fight.mp3"},M={},VOL=0.6;
+ const FILES={open:"bgm_open.mp3",fight:"bgm_fight.mp3",train:"bgm_train.mp3"},M={},VOL=0.6; // train＝稽古中の曲（ファイルがなければオープニング曲のまま）
+ let trainNg=false,lastId=null;
  const fade=(a,to,done)=>{clearInterval(a._f);a._f=setInterval(()=>{const v=a.volume,d=to-v;if(Math.abs(d)<0.05){a.volume=to;clearInterval(a._f);if(done)done()}else a.volume=Math.max(0,Math.min(1,v+Math.sign(d)*0.05))},40)};
  function applyFiles(){
   for(const k in FILES){
-   if(!M[k]){const a=new Audio(FILES[k]);a.loop=true;a.preload="auto";a.volume=0;M[k]=a}
+   if(!M[k]){const a=new Audio(FILES[k]);a.loop=true;a.preload="auto";a.volume=0;M[k]=a;
+    if(k==="train")a.onerror=()=>{if(trainNg)return;trainNg=true;delete FILES.train;delete M.train;const id=lastId;scene=null;if(id)setScene(id)}}
    const a=M[k];a.muted=muted;
    if(k===scene&&!duck){if(a.paused){a.volume=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}fade(a,VOL)}
    else if(!a.paused)fade(a,0,()=>a.pause());
@@ -684,7 +758,8 @@ const Aud=(()=>{
  function startBgm(){stopBgm();if(!ac||!scene)return;applyFiles();if(!TR[scene])return;step=0;nextT=ac.currentTime+0.15;timer=setInterval(tick,120)}
  function stopBgm(){if(timer){clearInterval(timer);timer=null}}
  function setScene(id){
-  const s=(id==="s-basho"||id==="s-team")?"fight":"open"; // 育成中（ホーム・稽古・ガチャ等）もオープニング曲
+  lastId=id;
+  const s=(id==="s-basho"||id==="s-team")?"fight":((id==="s-home"||id==="s-waza")&&!trainNg)?"train":"open"; // 稽古中（ホーム・技の稽古）は稽古の曲、ほかはオープニング曲
   if(s===scene)return;scene=s;if(ac&&!duck)startBgm();
  }
  // ---- 効果音 ----
@@ -727,7 +802,9 @@ const STABLES=[
 ];
 const SK=()=>STABLES[G.stable].k;
 const TOPRANK={9:{lab:"SSR",cls:"R-SSR",f:0.95,gr:0.35,txt:"横綱"},8:{lab:"SR",cls:"R-SR",f:0.91,gr:0.5,txt:"大関"},7:{lab:"R",cls:"R-R",f:0.86,gr:0.7,txt:"関脇"}};
-// 入門ガチャの18体（横綱3・大関5・関脇10）から2体を引く。[名前,体型,階級]
+// 力士の一覧。入門ガチャ（2体）と力士スカウトに出る。[名前,体型(0技巧1俊敏2筋力3バランス4巨漢),階級(9横綱8大関7関脇),新登場なら1]
+// 力士を増やすとき：下に1行足して、img/g番号.webp（番号は0から数えた順番。横綱は普通のまわしの img/n番号.webp も）を置く。
+// 4つ目に 1 を書くと「新登場」としてスカウトで出やすくなる（例 ["新山",3,8,1]）
 const ROSTER=[["龍王丸",2,9],["大波",1,9],["鶴松",4,9],
  ["紫峰",3,8],["橙海",0,8],["黒岩",3,8],["白鷹",0,8],["黄金山",4,8],
  ["赤城",3,7],["青嵐",1,7],["緑笑",4,7],["紫雲",1,7],["朱雀",3,7],["黒熊",2,7],["白雪",4,7],["碧海",1,7],["紅葉山",3,7],["金剛",0,7]];
@@ -805,7 +882,7 @@ function buildCreate(){
 function refreshCreate(){
  document.querySelectorAll("#types button").forEach(b=>b.classList.toggle("sel",+b.dataset.i===draft.type));
  const t=adjType(draft.type,draft.h??TYPES[draft.type].h);
- renderChar($("c-preview"),draft.type,draft,0,3);
+ renderPv($("c-preview"),draft.type,draft,0,3);
  $("in-h").value=t.h;$("h-val").textContent=t.h+"cm";
  const d0=t.h-TYPES[draft.type].h;
  $("h-hint").textContent=`型の標準は${TYPES[draft.type].h}cm。高くすると体重MAX・筋力MAXが増え、素早さMAXと人気が下がり、怪我しやすくなります。`+(d0?`（標準比${d0>0?"+":""}${d0}cm）`:"");
@@ -855,6 +932,7 @@ function goHome(){
  $("btn-ks").textContent=`化粧まわし（作成券${G.kt}枚／持っている${G.ks.length}）`;
  $("h-ban").textContent=`${G.stName}部屋　第${G.basho+1}場所　評価${G.prestige}`;
  $("h-coin").textContent=`所持 ${G.coin}両`;
+ if($("bn-n"))$("bn-n").textContent=benchName();
  $("roster").innerHTML=G.room.map((q,i)=>`<div class="rc ${i===G.sel?"sel":""}" data-i="${i}"><div class="char" id="rc${i}"></div><b>${q.name}</b><small>${RANKS[rankOf(q)]}</small><small class="st">${statusOf(q)||"　"}</small></div>`).join("");
  G.room.forEach((q,i)=>renderW($("rc"+i),q));
  $("h-name").textContent=p.name;
@@ -875,7 +953,8 @@ function goHome(){
  $("h-note").innerHTML=`得意手：<b>${HANDN[favOf(p)]}</b>／実効素早さ <b>${es.toFixed(1)}</b>（体重の超過${over}kgで−${(over*0.4).toFixed(0)}％）／総合力 <b>${score(p).toFixed(0)}</b>${dl(score(p),p.b0.sc)}<br><span class="small">カッコの数字は、この場所の稽古を始めてからの増減です（緑＝増加、赤＝減少）。総合力は疲労がたまると下がります</span>`
   +(p.inj>0?`<br><b style="color:#a8322d">怪我中：能力−30％、ぶつかり稽古不可（休養で治る）</b>`:"")
   +(p.out>0?`<br><b style="color:#a8322d">大怪我のため、次の場所は全休です（番付が下がります）</b>`:"")
-  +(G.buff>0?`<br>ごちそう効果：稽古の伸び1.5倍（あと${G.buff}回）`:"");
+  +(G.buff>0?`<br>ごちそう効果：稽古の伸び1.5倍（あと${G.buff}回）`:"")
+  +`<br>覚えた技：${wzLearned(p).length?wzLearned(p).map(w=>`${w.n}<span style="color:#c9a24a">${"★".repeat(wzLv(p,w.id))}</span>`).join("、"):"まだなし（「技の稽古」で覚えます）"}`;
  const left=ROOM_TURNS-G.turn;
  const nxt=r<9?`次の昇進まで あと${(RANK_TH[r+1]-p.rankPt).toFixed(1)}pt`:"最高位・横綱";
  $("h-turn").textContent=`稽古（部屋の残り${left}回）　いま：${p.name}　${nxt}`;
@@ -911,6 +990,118 @@ function train(k){
  if(G.turn>=ROOM_TURNS){modal(msg.replace(/\n/g,"<br>")+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre())}
  else modal(msg.replace(/\n/g,"<br>"),goHome);
 }
+/* ============ 力士スカウト（力士ガチャ）と控え ============ */
+const SC_COST1=1000,SC_COST10=9000,SC_PITY=30,LB_MAX=5,LB_COIN=500,BENCH_MAX=40;
+const SC_RATE={9:0.05,8:0.25}; // 残り（70％）は関脇
+const allW=()=>[...G.room,...(G.bench||[])];
+const findGi=gi=>allW().find(p=>p.gi===gi);
+function scRoll(){
+ G.bench=G.bench||[];G.spity=(G.spity||0)+1;
+ const x=Math.random(),r=G.spity>=SC_PITY?9:x<SC_RATE[9]?9:x<SC_RATE[9]+SC_RATE[8]?8:7;
+ if(r===9)G.spity=0;
+ const pool=[...ROSTER.keys()].filter(i=>ROSTER[i][2]===r),pick=pool.filter(i=>ROSTER[i][3]);
+ const gi=(pick.length&&Math.random()<0.5)?pick[ri(pick.length)]:pool[ri(pool.length)]; // 新登場は同じ階級の半分の確率を占める
+ const have=findGi(gi);let eff;
+ if(!have){if(G.bench.length>=BENCH_MAX){G.coin+=LB_COIN;eff="FULL"}else{G.bench.push(mkTop(gi));eff="NEW"}}
+ else if((have.lb||0)<LB_MAX){have.lb=(have.lb||0)+1;have.wMax+=3;have.sMax+=2;have.vMax+=2;have.w=Math.min(have.wMax,have.w+1);have.s=Math.min(have.sMax,have.s+1);have.v=Math.min(have.vMax,have.v+1);eff="LB"}
+ else{G.coin+=LB_COIN;eff="COIN"}
+ return {gi,r,eff,lb:have?have.lb:0};
+}
+function scout(n){
+ const cost=n===1?SC_COST1:SC_COST10;
+ if(G.coin<cost){$("sc-log").innerHTML="両が足りません。場所で勝って稼ぎましょう。";return}
+ G.coin-=cost;const res=[];for(let i=0;i<n;i++)res.push(scRoll());save();
+ const best=res.reduce((a,b)=>b.r>a.r?b:a);
+ $("sc-res").innerHTML="";$("sc-log").innerHTML="";refreshScout();
+ playGacha([TOPRANK[best.r].txt],()=>{
+  $("sc-res").innerHTML=res.map(x=>{const c=TOPRANK[x.r];return `<div class="tc"><b class="${c.cls}">${c.lab}</b><div class="char"><img class="body" src="img/g${x.gi}.webp" alt=""></div><b>${ROSTER[x.gi][0]}</b><small>${c.txt}</small><small>${x.eff==="NEW"?"<b style='color:#a8322d'>NEW！入門</b>":x.eff==="LB"?`限界突破 ${x.lb}/${LB_MAX}`:x.eff==="FULL"?`控えがいっぱい→${LB_COIN}両`:`＋${LB_COIN}両`}</small></div>`}).join("");
+  const nw=res.filter(x=>x.eff==="NEW").length;
+  $("sc-log").innerHTML=(nw?`新しく <b>${nw}人</b> が入門しました。ホームの「部屋の力士・入れ替え」で出場させられます。`:"新しい力士はいませんでした。")+(best.r===9?"<br><b class='R-SSR'>✨ 横綱！ ✨</b>":"");
+  refreshScout();
+ });
+}
+function refreshScout(){
+ $("sc-coin").textContent=G.coin+"両";$("sc-pity").textContent=SC_PITY-(G.spity||0);
+ $("sc-1").disabled=G.coin<SC_COST1;$("sc-10").disabled=G.coin<SC_COST10;
+ const pk=[...ROSTER.keys()].filter(i=>ROSTER[i][3]);
+ $("sc-pick").style.display=pk.length?"block":"none";
+ $("sc-pick").innerHTML="<b>新登場（出やすくなっています）</b><br>"+pk.map(i=>`${ROSTER[i][0]}（${TOPRANK[ROSTER[i][2]].txt}）`).join("、");
+ const own=new Set(allW().filter(p=>p.gi!==undefined).map(p=>p.gi));
+ $("sc-count").textContent=`${own.size}／${ROSTER.length}人`;
+ $("sc-book").innerHTML=ROSTER.map((x,i)=>{const o=own.has(i),c=TOPRANK[x[2]],p=findGi(i);return `<div class="tc ${o?"":"lk"}"><b class="${c.cls}">${c.lab}${x[3]?"　<span style='color:#a8322d'>新</span>":""}</b><div class="char"><img class="body" src="img/g${i}.webp" alt=""></div><b>${o?x[0]:"？？？"}</b><small>${c.txt}${o&&p.lb?"　突破"+p.lb:""}</small></div>`}).join("");
+}
+function openScout(){$("sc-res").innerHTML="";$("sc-log").innerHTML="1回1000両。";refreshScout();show("s-scout")}
+let bnSel=-1;
+function wCard(q,id,extra){return `<div class="tc ${extra||""}" data-k="${id}"><div class="char" id="${id}"></div><b>${q.name}</b><small>${RANKS[rankOf(q)]}${q.lb?"　突破"+q.lb:""}</small><small>力 ${Math.round(score(q))}${statusOf(q)?"　"+statusOf(q):""}</small></div>`}
+function renderBench(){
+ G.bench=G.bench||[];
+ $("bn-cnt").textContent=`全${G.room.length+G.bench.length}人`;
+ $("bn-team").innerHTML=G.room.map((q,i)=>wCard(q,"bt"+i,i===0?"":"")).join("");
+ $("bn-list").innerHTML=G.bench.length?G.bench.map((q,i)=>wCard(q,"bl"+i,i===bnSel?"pk":"")).join(""):`<div class="small" style="grid-column:1/-1">控えの力士はいません。ガチャの「力士スカウト」で迎えられます。</div>`;
+ G.room.forEach((q,i)=>renderW($("bt"+i),q));G.bench.forEach((q,i)=>renderW($("bl"+i),q));
+}
+function openBench(){bnSel=-1;renderBench();show("s-bench")}
+function benchName(){const n=(G.bench||[]).length;return `控え${n}人`}
+$("btn-bench").onclick=openBench;
+$("bn-back").onclick=goHome;
+$("bn-list").onclick=e=>{const c=e.target.closest(".tc[data-k]");if(!c)return;const i=+c.dataset.k.slice(2);bnSel=bnSel===i?-1:i;renderBench()};
+$("bn-team").onclick=e=>{const c=e.target.closest(".tc[data-k]");if(!c)return;const k=+c.dataset.k.slice(2);
+ if(k===0){modal("あなたが育てる力士は、入れ替えられません。");return}
+ if(bnSel<0){modal("先に、下の「控え」から出したい力士をタップしてください。");return}
+ const t=G.room[k];G.room[k]=G.bench[bnSel];G.bench[bnSel]=t;
+ const nm=G.room[k].name;bnSel=-1;save();renderBench();modal(`${nm} を出場メンバーに入れました。`)};
+$("g-toscout").onclick=openScout;
+$("sc-tochanko").onclick=()=>$("btn-gacha").click();
+$("sc-1").onclick=()=>scout(1);
+$("sc-10").onclick=()=>scout(10);
+$("sc-back").onclick=goHome;
+
+/* ============ 技の稽古（決まり手を覚える） ============ */
+const WZ_STEP=100,WZ_MAX=3; // 熟練度100で習得（★1）、最大★3
+const wzPt=(p,id)=>(p.wz&&p.wz[id])||0;
+const wzLv=(p,id)=>Math.min(WZ_MAX,Math.floor(wzPt(p,id)/WZ_STEP));
+const wzStars=n=>"★".repeat(n)+"☆".repeat(WZ_MAX-n);
+function wzLearned(p){return WAZA.filter(w=>wzLv(p,w.id)>0)}
+function wzBonus(p,hand){let n=0;WAZA.forEach(w=>{if(w.h===hand)n+=wzLv(p,w.id)});return Math.min(0.08,n*0.012)} // 同じ手の技の★の合計で勝ちやすくなる（最大＋8％）
+function pickKima(p,hand){ // 勝った側の手に合う決まり手。自分の力士は覚えた技から（★が多い技ほど出やすい）
+ const g=WAZA.filter(w=>w.h===hand);
+ if(p){const own=g.filter(w=>wzLv(p,w.id)>0);if(own.length){let r=Math.random()*own.reduce((a,w)=>a+wzLv(p,w.id),0);for(const w of own){r-=wzLv(p,w.id);if(r<0)return w}return own[0]}}
+ return g[ri(g.length)];
+}
+function openWaza(){renderWaza();show("s-waza")}
+function renderWaza(){
+ const p=P();hpTick();
+ $("wz-hp").textContent=`HP ${G.hp}/${maxHp()}`;
+ $("wz-head").innerHTML=`<b>${p.name}</b>（得意手：${HANDN[favOf(p)]}）　部屋の残り稽古 <b>${Math.max(0,ROOM_TURNS-G.turn)}</b>回<br>技を稽古すると熟練度がたまり、100で<b>習得（★1）</b>、最大★3。覚えた技は取組の決まり手に出て、その手（押す・組む・引く）で勝ちやすくなります。得意手の技は覚えやすいです。稽古1回＝HP${COST_TRAIN}。`;
+ $("wz-list").innerHTML=[0,1,2].map(h=>`<h2>${HAND[h]}の技</h2><div class="menu">`+WAZA.filter(w=>w.h===h).map(w=>{
+  const pt=wzPt(p,w.id),lv=wzLv(p,w.id),done=lv>=WZ_MAX,rest=WZ_STEP-pt%WZ_STEP;
+  return `<button data-w="${w.id}"><b>${w.n}</b><span class="wzs">${wzStars(lv)}</span><span>${w.d}</span><div class="bar" style="margin:4px 0 2px"><i style="width:${done?100:pt%WZ_STEP}%;background:#c9a24a"></i></div><span>${done?"極めた！":(lv?"次の★まで ":"習得まで ")+rest}</span></button>`}).join("")+`</div>`).join("");
+}
+function practiceWaza(id){
+ hpTick();
+ if(G.turn>=ROOM_TURNS){modal("この場所の稽古は終わりです。場所に入りましょう。",()=>openPre());return}
+ if(G.hp<COST_TRAIN){modal(`HPがありません。<br>あと <b>${waitText(COST_TRAIN)}</b> で1回復します。<br><span class="small">（${Math.round(HP_REGEN_MS/60000)}分に1回復。レベルが上がると最大HPが増えます）</span>`);return}
+ G.hp-=COST_TRAIN;if(G.hp<maxHp()&&G.hp===maxHp()-1)G.hpT=Date.now();addExp(10);
+ const p=P(),w=WAZA.find(x=>x.id===id);p.wz=p.wz||{};
+ const lv0=wzLv(p,id);
+ const g=Math.max(5,Math.round(rnd(26,40)*(w.h===favOf(p)?1.25:1)*(SK()==="train"?1.2:1)*(G.buff>0?1.5:1)*(p.fat>=70?0.6:1)*(p.inj>0?0.6:1)*(p.gr??1)));
+ p.wz[id]=Math.min(WZ_STEP*WZ_MAX,wzPt(p,id)+g);
+ const lv1=wzLv(p,id);
+ const k=["s","w","v"][w.h],mx={s:p.sMax,v:p.vMax,w:p.wMax}[k],b=p[k]; // 型の稽古で能力も少し伸びる（押す＝筋力、組む＝体重、引く＝素早さ）
+ p[k]=clamp(Math.round((b+0.8*(1-0.6*b/mx))*10)/10,10,mx);
+ p.fat=clamp(p.fat+10,0,100);
+ let msg=`${p.name}：${w.n}の稽古<br>熟練度 +${g}（${p.wz[id]}/${WZ_STEP*WZ_MAX}）　${wzStars(lv1)}<br>${{s:"筋力",w:"体重",v:"素早さ"}[k]}　${b} → <b>${p[k]}</b><br>疲労　${p.fat}％`;
+ if(lv1>lv0)msg+=`<br><b style="color:#a8322d">${lv0===0?`🎉「${w.n}」を習得した！`:`「${w.n}」の腕が上がった！`}</b>`;
+ if(Math.random()<0.012*Tt(p).inj*(1+p.fat/60)*(SK()==="care"?0.7:1)){p.inj=Math.max(p.inj,2);msg+="<br>⚠ 稽古中に怪我をした…（休養で治せます）"}
+ G.room.forEach((o,i)=>{if(i!==G.sel)o.fat=Math.max(0,o.fat-4)});
+ if(G.buff>0)G.buff--;
+ G.turn++;save();
+ const after=()=>{if(G.turn>=ROOM_TURNS)modal(msg+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre());else modal(msg,renderWaza)};
+ cutIn(w.id,{title:"技の稽古",text:(lv1>lv0?(lv0===0?"習得！ ":"上達！ "):"")+w.n,win:true,fb:CI_KIND(w.n)},after);
+}
+$("btn-wz").onclick=openWaza;
+$("wz-back").onclick=goHome;
+$("wz-list").onclick=e=>{const b=e.target.closest("button[data-w]");if(!b||$("ci").classList.contains("on")||$("modal").classList.contains("on"))return;practiceWaza(b.dataset.w)};
 function openPre(){G.skip=G.room.map(()=>false);renderPre();show("s-pre")}
 function renderPre(){
  $("pre-list").innerHTML=G.room.map((p,i)=>{
@@ -1006,12 +1197,13 @@ function playRound(my){
  const p=G.room[B.cur];
  const op=oppHand(), r=rpsResult(my,op);
  const me=score(p), oo=B.opp.score;
- let pr=0.5+(me-oo)/(2*(me+oo))*2.4+r*0.12;
+ const wb=wzBonus(p,my);
+ let pr=0.5+(me-oo)/(2*(me+oo))*2.4+r*0.12+wb;
  pr=clamp(pr,0.06,0.94);
- const win=Math.random()<pr;Aud.hit(win);
+ const win=Math.random()<pr;Aud.hit(win);B.lh=win?my:op; // この局面を取った側の手
  B.round++;if(win)B.rw++;else B.rl++;(B.rr=B.rr||[]).push(win);drawScore();
  const names=["立合い","攻防","決着"];
- const line=`${names[B.round-1]}：あなた「${HAND[my]}」 vs 相手「${HAND[op]}」→ `+(r>0?"読み勝ち！":r<0?"読み負け…":"あいこ")+(win?"　→ <b style='color:#a8322d'>"+p.name+"がこの局面を取った</b>":"　→ <b style='color:#285aaa'>"+B.opp.name+"がこの局面を取った</b>");
+ const line=`${names[B.round-1]}：あなた「${HAND[my]}」 vs 相手「${HAND[op]}」→ `+(r>0?"読み勝ち！":r<0?"読み負け…":"あいこ")+(wb>0?`（技の効果＋${Math.round(wb*100)}％）`:"")+(win?"　→ <b style='color:#a8322d'>"+p.name+"がこの局面を取った</b>":"　→ <b style='color:#285aaa'>"+B.opp.name+"がこの局面を取った</b>");
  $("blog").dataset.keep=($("blog").dataset.keep||"")+line+"<br>";
  $("blog").innerHTML=$("blog").dataset.keep;
  if(B.rw>=2||B.rl>=2||B.round>=3){endBout(B.rw>B.rl)}
@@ -1047,24 +1239,30 @@ function applyResult(i,win,kima){ // 1番の結果を反映（成長・疲労・
 }
 let CUT=true,ciTimer=null;
 const CI_FILES={oshi:1900,yori:2000,nage:1900,hiki:1600,tachi:1800,win:5000};
-const CI_KIND=k=>["押し出し","突き出し","送り出し","突き落とし"].includes(k)?"oshi":["寄り切り","寄り倒し","浴びせ倒し"].includes(k)?"yori":["上手投げ","下手投げ","掬い投げ","小手投げ"].includes(k)?"nage":"hiki";
-function cutIn(kind,o,done){ // o:{title,kima,win,mirror}
+const CI_KIND=k=>["押し出し","突き出し","送り出し"].includes(k)?"oshi":["寄り切り","寄り倒し","浴びせ倒し"].includes(k)?"yori":["上手投げ","下手投げ","掬い投げ","小手投げ"].includes(k)?"nage":"hiki";
+function cutIn(kind,o,done){ // o:{title,kima,win,mirror,text,fb}  fb＝その動画がないときに使う代わりの動画
  const box=$("ci"),bx=$("ci-box"),t=$("ci-t"),k=$("ci-k");let ended=false;
  const end=()=>{if(ended)return;ended=true;clearTimeout(ciTimer);box.classList.remove("on");box.onclick=null;Aud.duckBgm(false);done()};
- const im=new Image();im.src=`img/ci_${kind}.webp`;im.alt="";if(o.mirror)im.style.transform="scaleX(-1)";
+ const im=new Image();im.alt="";if(o.mirror)im.style.transform="scaleX(-1)";
+ if(o.fb)im.onerror=()=>{im.onerror=null;im.src=`img/ci_${o.fb}.webp`};
+ im.src=`img/ci_${kind}.webp`;
+ const ms=WAZA_MS[kind]||CI_FILES[kind]||CI_FILES[o.fb]||2000,hasT=!!(o.kima||o.text);
  bx.innerHTML="";bx.appendChild(im);t.textContent=o.title||"";
- k.classList.remove("on");k.textContent=o.kima?`${o.who?o.who+"の勝ち":o.win?"勝ち":"負け"}　${o.kima}`:"";
+ k.classList.remove("on");k.textContent=o.text!==undefined?o.text:o.kima?`${o.who?o.who+"の勝ち":o.win?"勝ち":"負け"}　${o.kima}`:"";
  box.classList.remove("on");void box.offsetWidth;box.classList.add("on");
- Aud.duckBgm(true);Aud.cut(o.kima?(o.win?"win":"lose"):"start");
- if(o.kima)setTimeout(()=>k.classList.add("on"),CI_FILES[kind]*0.55);
- ciTimer=setTimeout(end,CI_FILES[kind]+(o.kima?500:0));
+ Aud.duckBgm(true);Aud.cut(hasT?(o.win?"win":"lose"):"start");
+ if(hasT)setTimeout(()=>k.classList.add("on"),ms*0.55);
+ ciTimer=setTimeout(end,ms+(hasT?500:0));
  box.onclick=end;
 }
 function endBout(win){
  B.busy=true;$("rps").style.display="none";
  const p=G.room[B.cur];
- const kima=KIMA[ri(KIMA.length)];
- if(CUT){B.cutPending=true;cutIn(win?"win":CI_KIND(kima),{kima,win,mirror:!win,who:win?p.name:B.opp.name},()=>{B.cutPending=false;endBout2(win,p,kima)});return}
+ const lw=pickKima(win?p:null,B.lh??ri(3)),kima=lw.n;
+ if(CUT){B.cutPending=true;
+  const fin=()=>{B.cutPending=false;endBout2(win,p,kima)};
+  cutIn(lw.id,win?{text:kima,win,fb:CI_KIND(kima)}:{kima,win,mirror:true,who:B.opp.name,fb:CI_KIND(kima)},()=>{ // 決まり手の動画 → 勝ったときは勝ちの動画
+   if(win)cutIn("win",{kima,win,who:p.name},fin);else fin()});return}
  endBout2(win,p,kima);
 }
 function endBout2(win,p,kima){
@@ -1311,9 +1509,11 @@ function openFace(){const p=G.room[0];FD={...p.face};
  $("fc-picks").innerHTML=[["eye","目"],["brow","眉"],["nose","鼻"],["mouth","口"]].map(([k,l])=>`<div class="pick"><b>${l}</b><button data-k="${k}" data-d="-1">◀</button><span id="fp-${k}"></span><button data-k="${k}" data-d="1">▶</button></div>`).join("");
  show("s-face");renderFace();$("s-face").scrollTop=0}
 function renderFace(){const p=G.room[0];
- renderChar($("fc-pv"),p.type,FD,p.mc||0,hairOf(p),ksOf(p));$("fc-who").textContent=p.name;
+ renderPv($("fc-pv"),p.type,FD,p.mc||0,hairOf(p),ksOf(p));$("fc-who").textContent=p.name;
  for(const k of ["eye","brow","nose","mouth"])$("fp-"+k).textContent=FACE_NAMES[k][FD[k]]}
 $("btn-fc").onclick=openFace;
+$("fc-pv").onclick=()=>{const e=$("fc-pv");e.dataset.full=e.dataset.full==="1"?"":"1";renderFace()};
+$("c-preview").onclick=()=>{const e=$("c-preview");e.dataset.full=e.dataset.full==="1"?"":"1";refreshCreate()};
 $("fc-picks").onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;FD[k]=(FD[k]+ +b.dataset.d+10)%10;renderFace()};
 $("fc-ok").onclick=()=>{G.room[0].face={...FD};save();goHome()};
 $("fc-back").onclick=goHome;
@@ -1493,7 +1693,7 @@ function onTeam(){return G.room.map(p=>({n:p.name,t:p.type,gi:p.gi,top:p.top,f:p
 function onChar(el,w){try{if(w.gi!==undefined&&w.gi!==null)el.innerHTML=`<img class="body" src="img/${w.top===9?"n":"g"}${(w.gi|0)}.webp" alt="">`;else renderChar(el,w.t|0,w.f,w.mc|0,w.hr|0,w.ks||null)}catch(e){el.innerHTML=""}}
 function onSan(t){ // 相手から届いたデータは信用せず、範囲を丸める
  if(!Array.isArray(t)||t.length!==3)return null;
- return t.map(w=>({n:String(w.n||"？").slice(0,8),t:clamp(w.t|0,0,4),gi:(w.gi===undefined||w.gi===null)?undefined:clamp(w.gi|0,0,40),top:w.top|0,f:w.f||{eye:0,brow:0,nose:0,mouth:0},mc:w.mc|0,hr:clamp(w.hr|0,0,3),ks:w.ks||null,rk:clamp(w.rk|0,0,9),sc:clamp(+w.sc||20,10,200),fv:clamp(w.fv|0,0,2)}))}
+ return t.map(w=>({n:String(w.n||"？").slice(0,8),t:clamp(w.t|0,0,4),gi:(w.gi===undefined||w.gi===null)?undefined:clamp(w.gi|0,0,999),top:w.top|0,f:w.f||{eye:0,brow:0,nose:0,mouth:0},mc:w.mc|0,hr:clamp(w.hr|0,0,3),ks:w.ks||null,rk:clamp(w.rk|0,0,9),sc:clamp(+w.sc||20,10,200),fv:clamp(w.fv|0,0,2)}))}
 function onLoadFb(cb){
  if(window.firebase&&firebase.database){cb(true);return}
  let n=0;const urls=["https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"];
