@@ -435,8 +435,9 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 <section class="screen" id="s-gacha">
   <div class="top"><b>ちゃんこガチャ</b><span id="g-coin"></span></div>
   <div class="card small"><b>出たものは自動で効きます（使う操作は不要）</b><br>
-<b>N</b>：選んでいる力士の疲労−20（その場で回復）<br>
-<b>R</b>：ごちそう効果。次の稽古2回の伸びが1.5倍（稽古画面に残り回数が出ます）<br>
+<b>N</b>（どれか1つ）：疲労−20／部屋のHP＋2／人気＋2／部屋の経験＋15／体重＋2kg<br>
+<b>R</b>（どれか1つ）：次の稽古2回の伸び1.5倍／部屋のHP全回復／疲労0＋怪我が治る<br>
+<span style="opacity:.8">※疲労・人気・体重・怪我は、選んでいる力士に効きます。HPが満タンのときは両に変わります。</span><br>
 <b>SR・SSR</b>：親方が弟子入り。部屋の<b>全員</b>の能力の上限(MAX)が上がります（ずっと有効）。同じ親方が出たら200両に。</div>
 <div class="card small">N60% / R30% / SR8% / SSR2%。50連目までにSSRが出なければ必ずSSR（天井）。<br>いまの天井まで：<b id="g-pity"></b></div>
   <div class="row">
@@ -505,9 +506,9 @@ const CARDS=[
  {n:"軍師",r:"SR",e:{s:3,v:3},d:"筋力・素早さMAX+3"},{n:"古傷の鬼",r:"SR",e:{s:5},d:"筋力MAX+5"},{n:"若鷹",r:"SR",e:{v:4,w:3},d:"素早さMAX+4 体重MAX+3"}
 ];
 const ASSETS={parts:["eyeL","eyeR","nose","mouth"]};
-const CHANKO=[ // 画像c0..c9 とレア度
- {img:0,r:"N"},{img:1,r:"N"},{img:2,r:"N"},{img:3,r:"N"},{img:4,r:"N"},
- {img:5,r:"R"},{img:6,r:"R"},{img:7,r:"R"},{img:8,r:"SR"},{img:9,r:"SSR"}];
+const CHANKO=[ // 画像c0..c9 とレア度。fx＝出たときの効果
+ {img:0,r:"N",fx:"fat"},{img:1,r:"N",fx:"hp2"},{img:2,r:"N",fx:"pop"},{img:3,r:"N",fx:"exp"},{img:4,r:"N",fx:"wt"},
+ {img:5,r:"R",fx:"heal"},{img:6,r:"R",fx:"buff"},{img:7,r:"R",fx:"hpfull"},{img:8,r:"SR"},{img:9,r:"SSR"}];
 
 /* ============ 状態 ============ */
 let G=null, draft={type:3,h:180,eye:7,brow:0,nose:3,mouth:0,name:"天翔山"};
@@ -1254,8 +1255,18 @@ function roll(){
  const pool=CHANKO.filter(c=>c.r===rar);
  const c=pool[ri(pool.length)];
  let eff="";
- if(rar==="N"){P().fat=Math.max(0,P().fat-20);eff=`ちゃんこ：${P().name}の疲労−20`}
- else{G.buff=Math.max(G.buff,2);eff="ごちそうちゃんこ：次の稽古2回、伸び1.5倍"}
+ const p=P(),mx=maxHp();
+ switch(c.fx){
+  case "fat":p.fat=Math.max(0,p.fat-20);eff=`鶏の塩ちゃんこ：${p.name}の疲労−20`;break;
+  case "hp2":if(G.hp>=mx){G.coin+=100;eff="豚みそちゃんこ：HPが満タンなので 100両に"}else{G.hp=Math.min(mx,G.hp+2);eff="豚みそちゃんこ：部屋のHP＋2"}break;
+  case "pop":p.pop=clamp((p.pop||0)+2,0,100);eff=`つみれちゃんこ：${p.name}の人気＋2`;break;
+  case "exp":addExp(15);eff="海鮮ちゃんこ：部屋の経験＋15";break;
+  case "wt":p.w=Math.min(p.wMax,p.w+2);eff=`キムチちゃんこ：${p.name}の体重＋2kg`;break;
+  case "buff":G.buff=Math.max(G.buff,2);eff="鴨ちゃんこ：次の稽古2回、伸び1.5倍";break;
+  case "hpfull":if(G.hp>=mx){G.coin+=300;eff="ごま担々ちゃんこ：HPが満タンなので 300両に"}else{G.hp=mx;eff="ごま担々ちゃんこ：部屋のHPが全回復"}break;
+  case "heal":{const h=p.inj>0;p.inj=0;p.fat=0;eff=`野菜たっぷりちゃんこ：${p.name}の疲労0`+(h?"、怪我が治った！":"");break}
+  default:G.buff=Math.max(G.buff,2);eff="鴨ちゃんこ：次の稽古2回、伸び1.5倍"
+ }
  return {c,rar,eff};
 }
 function pull(n){
