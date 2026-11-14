@@ -532,7 +532,7 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 <div id="gx"><div class="gxw"><img id="gx-img" src="img/ga0.webp" alt=""><div id="gx-t"></div></div><div id="gx-s">タップでスキップ</div></div>
 <nav id="hbar">
   <button data-go="btn-rec"><i class="ic">番</i><span>番付・成績</span></button>
-  <button data-go="btn-gacha"><i class="ic">鍋</i><span>ガチャ</span></button>
+  <button data-go="btn-gacha"><i class="ic">福</i><span>福引</span></button>
   <button class="mid" data-go="btn-go"><b class="em"><svg viewBox="0 0 48 48" width="40" height="40"><circle cx="24" cy="24" r="21" fill="none" stroke="#fff7e6" stroke-width="4" stroke-dasharray="3 2.2"/><circle cx="24" cy="24" r="11.5" fill="none" stroke="#fff7e6" stroke-width="2.5"/><rect x="19" y="20" width="10" height="2.6" rx="1.3" fill="#fff7e6"/><rect x="19" y="25.4" width="10" height="2.6" rx="1.3" fill="#fff7e6"/></svg></b><span>場所へ</span></button>
   <button id="hb-dress"><i class="ic">装</i><span>装い</span></button>
   <button data-go="btn-on"><i class="ic">友</i><span>友だち戦</span></button>
@@ -1074,7 +1074,7 @@ function refreshScout(){
  $("sc-pick").innerHTML="<b>新登場（出やすくなっています）</b><br>"+pk.map(i=>`${ROSTER[i][0]}（${TOPRANK[ROSTER[i][2]].txt}）`).join("、");
  const own=new Set(allW().filter(p=>p.gi!==undefined).map(p=>p.gi));
  $("sc-count").textContent=`${own.size}／${ROSTER.length}人`;
- $("sc-book").innerHTML=ROSTER.map((x,i)=>{const o=own.has(i),c=TOPRANK[x[2]],p=findGi(i);return `<div class="tc ${o?"":"lk"}"><b class="${c.cls}">${c.lab}${x[3]?"　<span style='color:#a8322d'>新</span>":""}</b><div class="char"><img class="body" src="img/g${i}.webp" alt=""></div><b>${o?x[0]:"？？？"}</b><small>${c.txt}${o&&p.lb?"　突破"+p.lb:""}</small></div>`}).join("");
+ $("sc-book").innerHTML=[...ROSTER.keys()].sort((a,b)=>ROSTER[b][2]-ROSTER[a][2]||a-b).map(i=>{const x=ROSTER[i],o=own.has(i),c=TOPRANK[x[2]],p=findGi(i);return `<div class="tc ${o?"":"lk"}"><b class="${c.cls}">${c.lab}${x[3]?"　<span style='color:#a8322d'>新</span>":""}</b><div class="char"><img class="body" src="img/g${i}.webp" alt=""></div><b>${o?x[0]:"？？？"}</b><small>${c.txt}${o&&p.lb?"　突破"+p.lb:""}</small></div>`}).join("");
 }
 function openScout(){$("sc-res").innerHTML="";$("sc-log").innerHTML="1回1000両。";refreshScout();show("s-scout")}
 let bnSel=-1;
