@@ -683,7 +683,7 @@ const Aud=(()=>{
   }
  }
  // 音源ファイルのBGM（オープニング・作成中／取組中）。それ以外の画面は合成BGM
- const FILES={open:"audio/bgm_open.mp3",fight:"audio/bgm_fight.mp3"},M={},VOL=0.6;
+ const FILES={open:"bgm_open.mp3",fight:"bgm_fight.mp3"},M={},VOL=0.6;
  const fade=(a,to,done)=>{clearInterval(a._f);a._f=setInterval(()=>{const v=a.volume,d=to-v;if(Math.abs(d)<0.05){a.volume=to;clearInterval(a._f);if(done)done()}else a.volume=Math.max(0,Math.min(1,v+Math.sign(d)*0.05))},40)};
  function applyFiles(){
   for(const k in FILES){
