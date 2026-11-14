@@ -88,6 +88,9 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 .tc.pk .char{outline:4px solid var(--red);outline-offset:1px}
 .tc.lk .char img{filter:brightness(0);opacity:.3}
 .gtab{margin-bottom:8px}.gtab .btn{margin:0}
+.coin{display:inline-flex;align-items:center;gap:5px;font-size:22px;font-weight:900;color:#5a3a0e;white-space:nowrap;line-height:1}
+.coin svg{width:22px;height:30px;filter:drop-shadow(0 2px 1px rgba(0,0,0,.35))}
+.coin small{font-size:15px;margin-left:1px}
 /* 稽古場（ホームの稽古メニュー） */
 .kk-h{display:flex;align-items:center;justify-content:space-between;margin:16px 0 2px}
 .kk-h .kk-t{font-size:21px;font-weight:900;letter-spacing:.18em;border-left:6px solid var(--red);padding-left:8px}
@@ -837,10 +840,13 @@ const TOPRANK={9:{lab:"SSR",cls:"R-SSR",f:0.95,gr:0.35,txt:"横綱"},8:{lab:"SR"
 // 4つ目に 1 を書くと「新登場」としてスカウトで出やすくなる（例 ["新山",3,8,1]）
 const ROSTER=[["龍王丸",2,9],["大波",1,9],["鶴松",4,9],
  ["紫峰",3,8],["橙海",0,8],["黒岩",3,8],["白鷹",0,8],["黄金山",4,8],
- ["赤城",3,7],["青嵐",1,7],["緑笑",4,7],["紫雲",1,7],["朱雀",3,7],["黒熊",2,7],["白雪",4,7],["碧海",1,7],["紅葉山",3,7],["金剛",0,7]];
+ ["赤城",3,7],["青嵐",1,7],["緑笑",4,7],["紫雲",1,7],["朱雀",3,7],["黒熊",2,7],["白雪",4,7],["碧海",1,7],["紅葉山",3,7],["金剛",0,7],
+ // ここから追加の16人（2026-11-14）。4つ目の1＝新登場
+ ["鳳凰",2,9,1],["紅龍",3,8,1],["蒼牙",2,8,1],["笑福山",4,7,1],["熊王",4,8,1],["碧山",3,7,1],["疾風",1,7,1],["白翁",0,7,1],
+ ["福丸",3,7,1],["隼人",1,7,1],["岩鬼",4,8,1],["若紅",0,7,1],["荒鷲",2,8,1],["大潮",4,7,1],["青龍",2,7,1],["大笑",4,7,1]];
 const pickTwo=()=>{const a=[...ROSTER.keys()];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,2)};
 function renderW(el,p,kesho){ // 固定画像の力士は画像そのまま（横綱の化粧まわしはガチャ表示のときだけ）
- if(p.gi!==undefined){el.innerHTML=`<img class="body" src="img/${p.top===9&&!kesho?"n":"g"}${p.gi}.webp" alt="">`;return}
+ if(p.gi!==undefined){el.innerHTML=`<img class="body" src="img/${p.top===9&&!kesho?"n":"g"}${p.gi}.webp" alt="" onerror="this.onerror=null;this.src='img/g${p.gi}.webp'">`;return}
  renderChar(el,p.type,p.face,p.mc||0,hairOf(p),ksOf(p));
 }
 const HANDN=["押し","組み","引き"];
@@ -961,7 +967,7 @@ function goHome(){
  const p=P(), t=Tt(p), r=rankOf(p);
  $("btn-ks").textContent=`化粧まわし（作成券${G.kt}枚／持っている${G.ks.length}）`;
  $("h-ban").textContent=`${G.stName}部屋　第${G.basho+1}場所　評価${G.prestige}`;
- $("h-coin").textContent=`所持 ${G.coin}両`;
+ $("h-coin").innerHTML=coinHtml();
  if($("bn-n"))$("bn-n").textContent=benchName();
  $("roster").innerHTML=G.room.map((q,i)=>`<div class="rc ${i===G.sel?"sel":""}" data-i="${i}"><div class="char" id="rc${i}"></div><b>${q.name}</b><small>${RANKS[rankOf(q)]}</small><small class="st">${statusOf(q)||"　"}</small></div>`).join("");
  G.room.forEach((q,i)=>renderW($("rc"+i),q));
@@ -1022,6 +1028,14 @@ function train(k){
  if(G.turn>=ROOM_TURNS){modal(msg.replace(/\n/g,"<br>")+"<br><br><b>稽古はここまで。いよいよ場所入りです！</b>",()=>openPre())}
  else modal(msg.replace(/\n/g,"<br>"),goHomeKeep);
 }
+/* ============ 所持金（小判のしるし） ============ */
+let KB_N=0;const KOBAN_T=`<svg viewBox="0 0 44 60" aria-hidden="true"><defs><linearGradient id="kbg_ID" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".45" stop-color="#e2b33c"/><stop offset="1" stop-color="#9c6a12"/></linearGradient></defs>
+<ellipse cx="22" cy="30" rx="20" ry="28" fill="url(#kbg_ID)" stroke="#6b4508" stroke-width="2.2"/><ellipse cx="22" cy="30" rx="15.5" ry="23" fill="none" stroke="#a87418" stroke-width="1.2"/>
+<g stroke="#b5821f" stroke-width="1.1" opacity=".8"><path d="M9 14h26M7 19h30M6 24h32M6 36h32M7 41h30M9 46h26"/></g>
+<rect x="15" y="25" width="14" height="10" rx="2" fill="#f6d36a" stroke="#7a520c" stroke-width="1.2"/><text x="22" y="33.2" text-anchor="middle" font-size="8.5" font-weight="900" fill="#6b4508" font-family="serif">両</text>
+<ellipse cx="14" cy="15" rx="4" ry="7" fill="#fff" opacity=".35"/></svg>`;
+const coinHtml=()=>`<span class="coin">${KOBAN_T.replace(/kbg_ID/g,"kbg"+(++KB_N))}${G.coin.toLocaleString()}<small>両</small></span>`;
+
 /* ============ 力士スカウト（力士ガチャ）と控え ============ */
 const SC_COST1=1000,SC_COST10=9000,SC_PITY=30,LB_MAX=5,LB_COIN=500,BENCH_MAX=40;
 const SC_RATE={9:0.05,8:0.25}; // 残り（70％）は関脇
@@ -1053,7 +1067,7 @@ function scout(n){
  });
 }
 function refreshScout(){
- $("sc-coin").textContent=G.coin+"両";$("sc-pity").textContent=SC_PITY-(G.spity||0);
+ $("sc-coin").innerHTML=coinHtml();$("sc-pity").textContent=SC_PITY-(G.spity||0);
  $("sc-1").disabled=G.coin<SC_COST1;$("sc-10").disabled=G.coin<SC_COST10;
  const pk=[...ROSTER.keys()].filter(i=>ROSTER[i][3]);
  $("sc-pick").style.display=pk.length?"block":"none";
@@ -1519,7 +1533,7 @@ function pull(n){
  playGacha([best.rar],show1,{pre:"gi",asp:2,top:"11%",fs:"min(5.5vw,26px)",t:GX_T});
 }
 function refreshGacha(){
- $("g-coin").textContent=`所持 ${G.coin}両`;$("g-pity").textContent=`あと${50-G.pity}杯`;
+ $("g-coin").innerHTML=coinHtml();$("g-pity").textContent=`あと${50-G.pity}杯`;
  $("g-1").disabled=G.coin<300;$("g-10").disabled=G.coin<2700;
  const own=G.cards||[];$("k-count").textContent=`${own.length}/12`;
  $("k-grid").innerHTML=CARDS.map((c,i)=>{const o=own.includes(i);return `<div class="kard ${o?"":"lock"}"><img src="img/k${i}.jpg" alt=""><span class="rb R-${c.r}">${c.r}</span><span class="nm">${o?c.n+"親方":"？？？"}</span><div class="ef">${o?c.d:"未入門"}</div></div>`}).join("");
@@ -1726,7 +1740,7 @@ const ONNM=["先鋒","中堅","大将"],ONHAND=["押す","組む","引く"];
 const FB_DEFAULT={apiKey:"AIzaSyDnA-TQE8b2PCXgtDsnGPeKL5VxojnaMiI",authDomain:"oshi-sumo.firebaseapp.com",databaseURL:"https://oshi-sumo-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"oshi-sumo",storageBucket:"oshi-sumo.firebasestorage.app",messagingSenderId:"319178404742",appId:"1:319178404742:web:4c3298efeebf9cbd127207"}; // 推し相撲の Firebase（最初から組み込み）
 function onCfg(){try{return JSON.parse(localStorage.getItem("sumo-fbcfg")||"null")||FB_DEFAULT}catch(e){return FB_DEFAULT}}
 function onTeam(){return G.room.map(p=>({n:p.name,t:p.type,gi:p.gi,top:p.top,f:p.face||{eye:0,brow:0,nose:0,mouth:0},mc:p.mc||0,hr:hairOf(p),ks:ksOf(p)||null,rk:rankOf(p),sc:Math.round(score(p)*10)/10,fv:favOf(p)}))}
-function onChar(el,w){try{if(w.gi!==undefined&&w.gi!==null)el.innerHTML=`<img class="body" src="img/${w.top===9?"n":"g"}${(w.gi|0)}.webp" alt="">`;else renderChar(el,w.t|0,w.f,w.mc|0,w.hr|0,w.ks||null)}catch(e){el.innerHTML=""}}
+function onChar(el,w){try{if(w.gi!==undefined&&w.gi!==null)el.innerHTML=`<img class="body" src="img/${w.top===9?"n":"g"}${(w.gi|0)}.webp" alt="" onerror="this.onerror=null;this.src='img/g${(w.gi|0)}.webp'">`;else renderChar(el,w.t|0,w.f,w.mc|0,w.hr|0,w.ks||null)}catch(e){el.innerHTML=""}}
 function onSan(t){ // 相手から届いたデータは信用せず、範囲を丸める
  if(!Array.isArray(t)||t.length!==3)return null;
  return t.map(w=>({n:String(w.n||"？").slice(0,8),t:clamp(w.t|0,0,4),gi:(w.gi===undefined||w.gi===null)?undefined:clamp(w.gi|0,0,999),top:w.top|0,f:w.f||{eye:0,brow:0,nose:0,mouth:0},mc:w.mc|0,hr:clamp(w.hr|0,0,3),ks:w.ks||null,rk:clamp(w.rk|0,0,9),sc:clamp(+w.sc||20,10,200),fv:clamp(w.fv|0,0,2)}))}
