@@ -466,6 +466,19 @@ input[type=text]{width:100%;font:inherit;font-size:20px;padding:8px;border:2px s
 </div>
 
 <script>
+/* 画像の置き場所の振り替え（画像が 2_画像1/img/ などに分かれて入っているため）。
+   表にない画像は img/ から読む。 */
+const IMAP={"bg0.jpg":"2_画像1","bg1.jpg":"2_画像1","bg2.jpg":"2_画像1","bg3.jpg":"2_画像1","bg4.jpg":"2_画像1","bg5.jpg":"2_画像1","bg6.jpg":"2_画像1","bg7.jpg":"2_画像1","bg8.jpg":"2_画像1","bg9.jpg":"2_画像1","brow0.png":"2_画像1","brow1.png":"2_画像1","brow2.png":"2_画像1","brow3.png":"2_画像1","brow4.png":"2_画像1","brow5.png":"2_画像1","brow6.png":"2_画像1","brow7.png":"2_画像1","brow8.png":"2_画像1","brow9.png":"2_画像1","c0.jpg":"2_画像1","c1.jpg":"2_画像1","c2.jpg":"2_画像1","c3.jpg":"2_画像1","c4.jpg":"2_画像1","c5.jpg":"2_画像1","c6.jpg":"2_画像1","c7.jpg":"2_画像1","c8.jpg":"2_画像1","c9.jpg":"2_画像1","ci_hiki.webp":"2_画像1","ci_nage.webp":"2_画像1","ci_oshi.webp":"2_画像1","ci_tachi.webp":"2_画像1","ci_win.webp":"2_画像1","ci_yori.webp":"2_画像1","ga4.webp":"3_画像2","ga5.webp":"3_画像2","ga6.webp":"3_画像2","ga7.webp":"3_画像2","gi0.webp":"3_画像2","gi1.webp":"3_画像2","gi2.webp":"3_画像2","gi3.webp":"3_画像2","gi4.webp":"3_画像2","gi5.webp":"3_画像2","gi6.webp":"3_画像2","gi7.webp":"3_画像2","k0.jpg":"3_画像2","k0_0.webp":"3_画像2","k0_1.webp":"3_画像2","k0_2.webp":"3_画像2","k0_3.webp":"3_画像2","k0_4.webp":"3_画像2","k1.jpg":"3_画像2","k10.jpg":"3_画像2","k11.jpg":"3_画像2","k1_0.webp":"3_画像2","k1_1.webp":"3_画像2","k1_2.webp":"3_画像2","nose1.png":"4_画像3","nose2.png":"4_画像3","nose3.png":"4_画像3","nose4.png":"4_画像3","nose5.png":"4_画像3","nose6.png":"4_画像3","nose7.png":"4_画像3","nose8.png":"4_画像3","nose9.png":"4_画像3","p0_0.webp":"4_画像3","p0_0_1.webp":"4_画像3","p0_0_2.webp":"4_画像3","p0_0_3.webp":"4_画像3","p0_0_4.webp":"4_画像3","p0_0_5.webp":"4_画像3","p0_0_6.webp":"4_画像3","p0_0_7.webp":"4_画像3","p2_0.webp":"5_画像4","p2_0_1.webp":"5_画像4","p2_0_2.webp":"5_画像4","p2_0_3.webp":"5_画像4","p2_0_4.webp":"5_画像4","p2_0_5.webp":"5_画像4","p2_0_6.webp":"5_画像4","p2_0_7.webp":"5_画像4","p2_1.webp":"5_画像4","p2_1_1.webp":"5_画像4","p2_1_2.webp":"5_画像4","p2_1_3.webp":"5_画像4","p2_1_4.webp":"5_画像4","p4_1_1.webp":"6_画像5","p4_1_2.webp":"6_画像5","p4_1_3.webp":"6_画像5","p4_1_4.webp":"6_画像5","p4_1_5.webp":"6_画像5"};
+function IP(s){return String(s).replace(/(^|[^\w\/])img\/([\w.\-]+)/g,(m,a,n)=>a+(IMAP[n]?IMAP[n]+"/img/":"img/")+n)}
+(function(){
+ const d=Object.getOwnPropertyDescriptor(Element.prototype,"innerHTML");
+ Object.defineProperty(Element.prototype,"innerHTML",{configurable:true,get:d.get,set(v){d.set.call(this,typeof v==="string"?IP(v):v)}});
+ const s=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,"src");
+ Object.defineProperty(HTMLImageElement.prototype,"src",{configurable:true,get:s.get,set(v){s.set.call(this,IP(v))}});
+ document.querySelectorAll("img[src]").forEach(i=>{const a=i.getAttribute("src"),b=IP(a);if(a!==b)i.setAttribute("src",b)});
+})();
+</script>
+<script>
 "use strict";
 /* ============ データ ============ */
 const TYPES=[
@@ -858,7 +871,7 @@ function goHome(){
  G.room.forEach((q,i)=>renderW($("rc"+i),q));
  $("h-name").textContent=p.name;
  $("h-sub").textContent=`${RANKS[r]}　${t.name}　${t.h}cm　${p.w}kg`;
- $("hero").style.backgroundImage=`url(img/bg${G.basho%10}.jpg)`;
+ $("hero").style.backgroundImage=IP(`url(img/bg${G.basho%10}.jpg)`);
  renderW($("c-home"),p);
  const cur={type:p.type,h:t.h,w:p.w,s:p.s,v:p.v,pop:p.pop}, mx={type:p.type,h:t.h,wMax:p.wMax,sMax:p.sMax,vMax:p.vMax,pop:p.pop};
  radarSVG($("radar2"),[{v:radarVals(mx,true),fill:"none",stroke:"#2b1d12",dash:true},{v:radarVals(cur,false),fill:"rgba(168,50,45,.3)",stroke:"#a8322d"}]);
