@@ -690,6 +690,7 @@ const NB=[{"neckY": 210, "neckX": 220, "neckW": 69}, {"neckY": 210, "neckX": 220
 const HD=[[{"w": 125, "h": 148, "ey": 73.8, "my": 106.5}, {"w": 121, "h": 167, "ey": 92.4, "my": 125.1}, {"w": 97, "h": 150, "ey": 75.9, "my": 108.6}, {"w": 103, "h": 161, "ey": 87.0, "my": 119.7}], [{"w": 131, "h": 151, "ey": 69.9, "my": 97.8}, {"w": 125, "h": 156, "ey": 75.3, "my": 103.2}, {"w": 108, "h": 153, "ey": 72.6, "my": 100.5}, {"w": 110, "h": 162, "ey": 82.2, "my": 110.1}], [{"w": 133, "h": 154, "ey": 65.1, "my": 92.1}, {"w": 125, "h": 162, "ey": 72.0, "my": 99.0}, {"w": 107, "h": 154, "ey": 65.4, "my": 92.4}, {"w": 111, "h": 163, "ey": 74.1, "my": 101.1}], [{"w": 149, "h": 150, "ey": 62.1, "my": 93.6}, {"w": 133, "h": 158, "ey": 69.9, "my": 101.4}, {"w": 131, "h": 148, "ey": 61.2, "my": 92.7}, {"w": 129, "h": 162, "ey": 75.3, "my": 106.8}], [{"w": 146, "h": 148, "ey": 60.3, "my": 89.7}, {"w": 139, "h": 161, "ey": 72.9, "my": 102.3}, {"w": 133, "h": 154, "ey": 66.3, "my": 95.7}, {"w": 132, "h": 163, "ey": 75.6, "my": 105.0}]]; // 頭ごとの大きさと、目・口の高さ（頭の絵の上からの距離）
 const HFW=58.5, HOV=22; // 顔の部品の大きさの基準、頭を首に重ねる量
 const KH=[3,3,0,1]; // 化粧まわしの絵（昔の体）で使う髪の番号
+const FL=[{b:-20,n:89,m:109,e:156,c:200},{b:-37,n:68,m:93,e:160,c:240},{b:-27,n:67,m:90,e:167,c:275},{b:-35,n:62,m:105,e:173,c:300},{b:-37,n:62,m:98,e:173,c:360}]; // 顔の形ごとの部品の位置（元の顔の絵から測った値）
 function headBox(typeIdx,face,hair){ // 頭の位置（220x330の座標）
  const hs=(hair===undefined||hair<0)?0:clamp(hair|0,0,3),fi=clamp(face.rk|0,0,4),B=NB[typeIdx],hm=HD[fi][hs];
  const left=(B.neckX-hm.w/2)/2,top=(B.neckY+HOV-hm.h)/2;
@@ -703,17 +704,19 @@ function renderChar(el,typeIdx,face,mc,hair,ks){
  const w=(px)=>`width:${(px/W*100).toFixed(2)}%`;
  let h=`<img class="body" src="img/nb${typeIdx}_${mc|0}.webp" alt="">`;
  h+=`<img class="part nm hd" style="left:${(hb.cx/W*100).toFixed(2)}%;top:${((hb.top+hb.h/2)/H*100).toFixed(2)}%;width:${(hb.w/W*100).toFixed(2)}%" src="img/hd${hb.fi}_${hb.hs}.webp" alt="">`; // .part は中心で位置を決める
- const fw=hb.fw,cx=hb.cx,ey=hb.ey,my=hb.my,nb=ey+0.28*fw;
- const fe=0.84*fw/520, fb=0.90*fw/600, fn=0.20*fw/220, fm=0.32*fw/335;
+ // 元の顔の絵に合わせた部品の位置（元の絵のピクセル。目の高さからの差）：眉・鼻の下・口・両目の幅・顔の幅
+ const L=FL[hb.fi],k=hb.w/HD[hb.fi][hb.hs].w*0.30; // 元の絵→220x330 の倍率
+ const cx=hb.cx,ey=hb.ey,by=ey+L.b*k,ny=ey+L.n*k,my=ey+L.m*k,es=L.e*k,cw=L.c*k;
  const eI=face.eye||0, bI=face.brow||0, nI=face.nose||0, mI=face.mouth||0, hg=face.hige||0;
  const put=(x,y,pxw,src,nm)=>`<img class="part${nm?" nm":""}" style="${pc(x,y)};${w(pxw)}" src="${src}" alt="">`;
- const HG=[null,{w:.40,y:-.06,f:1},{w:.44,y:-.05,f:1},{w:.46,y:.03,f:1},{w:.60,y:.10,f:0},{w:.58,y:.10,f:0}]; // ひげ：幅・口からの高さ（fw比）・口より手前か
- const beard=()=>{const g=HG[hg];return g?put(cx,my+g.y*fw,g.w*fw,`img/hige${hg}.png`,1):""};
+ const HG=[null,{w:.40,y:-.30,f:1},{w:.45,y:-.28,f:1},{w:.50,y:.12,f:1},{w:.62,y:.42,f:0},{w:.60,y:.40,f:0}]; // ひげ：顔の幅に対する幅・口からの高さ（両目の幅比）・口より手前か
+ const beard=()=>{const g=HG[hg];return g?put(cx,my+g.y*es,g.w*cw,`img/hige${hg}.png`,1):""};
  if(hg&&!HG[hg].f)h+=beard();
- h+=put(cx,ey,PW.eye[eI]*fe*(eI>=10?0.92:1),`img/eye${eI}.png`,eI>=10);
- h+=put(cx,ey-0.125*fw,PW.brow[bI]*fb*(bI>=10?0.86:1),`img/brow${bI}.png`,bI>=10);
- h+=put(cx,nb-PH.nose[nI]*fn/2,PW.nose[nI]*fn,`img/nose${nI}.png`,nI>=10);
- h+=put(cx,my,PW.mouth[mI]*fm,`img/mouth${mI}.png`,mI>=10);
+ const ew=es*1.18*PW.eye[eI]/520, bw=es*1.22*PW.brow[bI]/600, nw=es*(0.34+0.0005*(L.c-200))*PW.nose[nI]/220, mw=es*(0.60+0.0010*(L.c-200))*PW.mouth[mI]/335;
+ h+=put(cx,ey,ew,`img/eye${eI}.png`,eI>=10);
+ h+=put(cx,by,bw,`img/brow${bI}.png`,bI>=10);
+ h+=put(cx,ny-nw*PH.nose[nI]/PW.nose[nI]/2,nw,`img/nose${nI}.png`,nI>=10);
+ h+=put(cx,my,mw,`img/mouth${mI}.png`,mI>=10);
  if(hg&&HG[hg].f)h+=beard();
  el.innerHTML=h;
 }
