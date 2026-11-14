@@ -44,7 +44,7 @@ h2{font-size:19px;margin:14px 0 6px;border-left:6px solid var(--red);padding-lef
 .tg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;font-size:15px}
 .tc{display:flex;flex-direction:column;gap:2px}.tc small{font-size:13px}.tc .char{border-width:1px}
 .stb{display:block;width:100%;text-align:left;font:inherit;border:2px solid var(--ink);background:#fff7e6;border-radius:10px;padding:8px 10px;margin:6px 0;box-shadow:0 3px 0 var(--ink);color:var(--ink)}
-.stb b{display:block;font-size:18px}.stb span{font-size:15px;opacity:.85}
+.stb{display:flex;align-items:center;gap:10px}.stb img{width:64px;height:64px;flex:0 0 64px;border-radius:8px}.stb .tx{flex:1;min-width:0}.stb b{display:block;font-size:18px}.stb span{font-size:15px;opacity:.85}
 .stb.sel{outline:3px solid var(--red);background:#fde9bd}
 #hlp{position:fixed;top:6px;right:46px;z-index:70;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:#fff7e6;font-size:18px;font-weight:700;line-height:1;padding:0;color:var(--ink)}
 #snd{position:fixed;top:6px;right:6px;z-index:70;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:#fff7e6;font-size:18px;line-height:1;padding:0;color:var(--ink)}#snd.off{opacity:.5;text-decoration:line-through}
@@ -756,7 +756,7 @@ let step=0;
 const newDraft=()=>({type:3,h:180,eye:ri(10),brow:ri(10),nose:ri(10),mouth:ri(10),name:randName()});
 let stSel=0;
 function startCreate(){G=null;step=0;draft=newDraft();stSel=0;renderStable();show("s-stable")}
-function renderStable(){$("st-list").innerHTML=STABLES.map((x,i)=>`<button class="stb ${i===stSel?"sel":""}" data-i="${i}"><b>${x.n}</b><span>${x.d}</span></button>`).join("")}
+function renderStable(){$("st-list").innerHTML=STABLES.map((x,i)=>`<button class="stb ${i===stSel?"sel":""}" data-i="${i}"><img src="img/sti${i}.webp" alt=""><div class="tx"><b>${x.n}</b><span>${x.d}</span></div></button>`).join("")}
 function stableGo(){
  const nm=($("in-stname").value||"宝光").trim().slice(0,4);
  G={room:[],sel:0,turn:0,basho:0,coin:700,pity:0,buff:0,pulls:0,cards:[],cardB:{w:0,s:0,v:0},teamW:0,teamL:0,prestige:0,skip:[false,false,false],stable:stSel,stName:nm,lv:1,exp:0,hp:12,hpT:Date.now()};
